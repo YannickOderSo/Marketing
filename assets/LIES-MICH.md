@@ -1,8 +1,5 @@
 # Logo
 
-Das offizielle Logo der Hochschule Kaiserslautern hier ablegen als
+`hskl-logo.png` ist das Logo der Hochschule Kaiserslautern. Es wird oben links auf jeder Seite angezeigt.
 
-- `hskl-logo.svg` (bevorzugt) oder
-- `hskl-logo.png`
-
-Die Seite zeigt es dann automatisch oben links an. Ohne Logo-Datei erscheint der Name der Hochschule als Schriftzug.
+Zum Austauschen eine neue Datei mit demselben Namen ablegen oder den Pfad in `js/config.js` unter `logo` ändern.

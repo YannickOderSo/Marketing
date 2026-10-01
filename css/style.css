@@ -2,33 +2,40 @@
    Layout: Kopfzeile mit Hochschul-Logo, darunter drei Ansichten (Start, Auslosung, Arbeitsbereich).
    Der Arbeitsbereich führt eine Gruppe Feld für Feld vom Markensteuerrad bis zum Pitch-Board. */
 
+/* Layout-Konzept: Petrol aus dem HS-KL-Logo trägt Navigation und Aktionen,
+   der Farbverlauf des Logos (Cyan → Petrol → Grün → Lime) erscheint nur als Leiste oben. */
 :root {
-  /* ---- HS-KL Farben ----------------------------------------------------
-     Platzhalterwerte: bitte mit den Hex-Werten aus dem Corporate Design
-     der Hochschule Kaiserslautern ersetzen. --brand ist die Hauptfarbe,
-     --brand-text dieselbe Farbe als lesbare Schriftfarbe. */
-  --brand: #004F8B;
+  /* ---- HS-KL Farben (aus dem Logo der Hochschule Kaiserslautern) ------- */
+  --hs-cyan: #1BBDED;
+  --hs-teal: #3DA8BE;
+  --hs-petrol: #08626C;
+  --hs-green: #008F57;
+  --hs-lime: #90BC20;
+  --hs-grey: #404040;
+
+  --brand: var(--hs-petrol);
   --brand-ink: #FFFFFF;
-  --brand-text: #004F8B;
-  --brand-soft: #E0EBF5;
+  --brand-text: #08626C;
+  --brand-soft: #E0EFF1;
+  --brand-gradient: linear-gradient(90deg, var(--hs-cyan), var(--hs-teal) 25%, var(--hs-petrol) 50%, var(--hs-green) 75%, var(--hs-lime));
   /* -------------------------------------------------------------------- */
 
-  --bg: #EEF1F5;
+  --bg: #ECF1F2;
   --surface: #FFFFFF;
-  --surface-2: #F5F7FA;
-  --ink: #142030;
-  --muted: #5A6577;
-  --line: #D4DBE4;
-  --accent: #004F8B;
+  --surface-2: #F4F7F8;
+  --ink: #17262A;
+  --muted: #55666A;
+  --line: #D1DCDF;
+  --accent: #08626C;
   --accent-ink: #FFFFFF;
-  --accent-soft: #DCE8F5;
-  --ok: #1E7F46;
+  --accent-soft: #DAEDEF;
+  --ok: #00824F;
   --warn: #B4400B;
-  --hard: #DCE8F5;
-  --soft: #FBE6D6;
+  --hard: #DDEEF1;
+  --soft: #E9F3D9;
   --logo-bg: transparent;
   --qr-bg: #FFFFFF;
-  --on-swatch: #142030;
+  --on-swatch: #17262A;
   --sw1: #FF7A59; --sw2: #FFC53D; --sw3: #34C6B8; --sw4: #B794FF; --sw5: #92D650;
   --sw6: #FF92C8; --sw7: #5BB8FF; --sw8: #F4A261; --sw9: #D4DE5A; --sw10: #A3ADFF;
 
@@ -39,18 +46,18 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --brand-text: #8CC4F5; --brand-soft: #1B3550;
-    --bg: #0E1420; --surface: #171E2C; --surface-2: #1F2738; --ink: #E8EDF4; --muted: #9BA6B7;
-    --line: #2C3648; --accent: #7DB8F0; --accent-ink: #0E1420; --accent-soft: #1D3654;
-    --ok: #4ADE80; --warn: #FB923C; --hard: #1D3654; --soft: #43301F; --logo-bg: #FFFFFF;
+    --brand-text: #5CCBE0; --brand-soft: #143338;
+    --bg: #0B1517; --surface: #132124; --surface-2: #1A2B2F; --ink: #E5EEF0; --muted: #95A9AD;
+    --line: #27393D; --accent: #4FC6DC; --accent-ink: #0B1517; --accent-soft: #123A41;
+    --ok: #5BCB8A; --warn: #FB923C; --hard: #123A41; --soft: #263A1A; --logo-bg: #FFFFFF;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --brand-text: #8CC4F5; --brand-soft: #1B3550;
-  --bg: #0E1420; --surface: #171E2C; --surface-2: #1F2738; --ink: #E8EDF4; --muted: #9BA6B7;
-  --line: #2C3648; --accent: #7DB8F0; --accent-ink: #0E1420; --accent-soft: #1D3654;
-  --ok: #4ADE80; --warn: #FB923C; --hard: #1D3654; --soft: #43301F; --logo-bg: #FFFFFF;
+  --brand-text: #5CCBE0; --brand-soft: #143338;
+  --bg: #0B1517; --surface: #132124; --surface-2: #1A2B2F; --ink: #E5EEF0; --muted: #95A9AD;
+  --line: #27393D; --accent: #4FC6DC; --accent-ink: #0B1517; --accent-soft: #123A41;
+  --ok: #5BCB8A; --warn: #FB923C; --hard: #123A41; --soft: #263A1A; --logo-bg: #FFFFFF;
   color-scheme: dark;
 }
 
@@ -105,7 +112,7 @@ p { margin: 0; }
 
 /* ---------- Kopfzeile ---------- */
 .site-header { background: var(--surface); border-bottom: 1px solid var(--line); }
-.site-header::before { content: ""; display: block; height: 6px; background: var(--brand); }
+.site-header::before { content: ""; display: block; height: 6px; background: var(--brand-gradient); }
 .site-header-inner {
   max-width: 1200px;
   margin-inline: auto;
@@ -117,7 +124,7 @@ p { margin: 0; }
   gap: .6rem 1.4rem;
 }
 .brandmark { display: flex; align-items: center; gap: .75rem; color: var(--ink); text-decoration: none; min-width: 0; }
-.logo { height: 46px; width: auto; max-width: 220px; background: var(--logo-bg); border-radius: 6px; padding: 2px; }
+.logo { display: block; height: 76px; width: auto; max-width: 100%; background: var(--logo-bg); border-radius: 8px; padding: 3px 6px; }
 .wordmark { display: grid; line-height: 1.15; }
 .wordmark strong { font-family: var(--font-display); font-stretch: 105%; font-weight: 800; font-size: 1.02rem; color: var(--brand-text); }
 .wordmark span { font-family: var(--font-mono); font-size: .66rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
@@ -847,6 +854,25 @@ dialog.modal::backdrop { background: rgba(8, 14, 26, .6); }
 }
 .toast.show { transform: translate(-50%, 0); opacity: 1; }
 
+/* ---------- Fußzeile ---------- */
+.site-footer { border-top: 1px solid var(--line); background: var(--surface); }
+.site-footer::before { content: ""; display: block; height: 3px; background: var(--brand-gradient); }
+.site-footer-inner {
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4vw, 48px);
+  padding-block: 1.1rem calc(1.1rem + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: .4rem 1.5rem;
+  font-size: .88rem;
+  color: var(--muted);
+}
+.site-footer b { color: var(--ink); }
+.byline { font-size: .95rem; color: var(--muted); }
+.byline b { color: var(--ink); }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 980px) {
   .flow-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -865,6 +891,7 @@ dialog.modal::backdrop { background: rgba(8, 14, 26, .6); }
   .persona-card, .poster { position: static; }
   .course { padding-left: 0; border-left: 0; }
   .site-nav { margin-left: 0; width: 100%; }
+  .logo { height: 58px; }
 }
 @media (max-width: 760px) {
   .group { grid-template-columns: 1fr; }
@@ -896,7 +923,7 @@ dialog.modal::backdrop { background: rgba(8, 14, 26, .6); }
 @media print {
   :root { --bg: #FFFFFF; }
   body { background: #FFFFFF; }
-  .site-header, .ws-head, .steps-nav, .step-foot, .board-actions, .step-intro, .toast { display: none !important; }
+  .site-header, .site-footer, .ws-head, .steps-nav, .step-foot, .board-actions, .step-intro, .toast { display: none !important; }
   .wrap { padding: 0; max-width: none; }
   .panel, .board-hero { break-inside: avoid; }
 }

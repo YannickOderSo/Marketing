@@ -1,6 +1,10 @@
 # Rebranding-Roulette
 
-Interaktive Seite für eine Unterrichtsstunde im Modul **Strategisches Marketing** (Hochschule Kaiserslautern). Jede Gruppe bekommt zufällig eine bekannte Marke und eine neue Zielgruppe, zum Beispiel Süßigkeiten für die Fitness-Bubble. Danach arbeitet jede Gruppe in ihrem eigenen Arbeitsbereich das Rebranding aus und präsentiert es als Pitch.
+Interaktive Seite für eine Unterrichtsstunde im Modul **Strategisches Marketing** bei Prof. Arend-Fuchs (Hochschule Kaiserslautern). Eine Unterrichtseinheit von **Yannick Heisler** und **Elias Knauber**.
+
+Online: **https://yannickoderso.github.io/Marketing/**
+
+ Jede Gruppe bekommt zufällig eine bekannte Marke und eine neue Zielgruppe, zum Beispiel Süßigkeiten für die Fitness-Bubble. Danach arbeitet jede Gruppe in ihrem eigenen Arbeitsbereich das Rebranding aus und präsentiert es als Pitch.
 
 ## Ablauf in der Stunde
 
@@ -35,9 +39,9 @@ Lokal lässt sich `index.html` auch direkt im Browser öffnen. Dann öffnen Grup
 
 | Was | Wo |
 | --- | --- |
-| Hochschule, Modul, Professorin, Semester, Pitch-Dauer | `js/config.js` |
-| Logo | Datei `assets/hskl-logo.svg` oder `assets/hskl-logo.png` ablegen |
-| Farben (HS-KL Corporate Design) | ganz oben in `css/style.css`, Abschnitt „HS-KL Farben“ |
+| Hochschule, Modul, Professorin, Semester, Autoren, Pitch-Dauer | `js/config.js` |
+| Logo | `assets/hskl-logo.png` |
+| Farben (aus dem HS-KL-Logo: Cyan, Petrol, Grün, Lime) | ganz oben in `css/style.css`, Abschnitt „HS-KL Farben“ |
 | Marken, Zielgruppen, gesperrte Kombinationen | `js/data.js` oder auf der Seite unter „Listen bearbeiten“ |
 
 ## Dateien

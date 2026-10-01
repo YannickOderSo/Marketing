@@ -10,6 +10,7 @@
     modul: "Strategisches Marketing",
     lehrende: "",
     semester: "",
+    autoren: [],
     logo: [],
     standardGruppen: 5,
     maxGruppen: 10,
@@ -96,11 +97,19 @@
   /* =====================================================================
      Branding
      ===================================================================== */
+  function authorText() {
+    const list = (CFG.autoren || []).filter(Boolean);
+    if (list.length < 2) return list.join("");
+    return `${list.slice(0, -1).join(", ")} und ${list[list.length - 1]}`;
+  }
   function applyBranding() {
     $("#wm-name").textContent = CFG.hochschule;
     $("#wm-sub").textContent = CFG.hochschuleZusatz;
     $("#course-title").textContent = CFG.modul;
     $("#course-meta").textContent = [CFG.lehrende, CFG.semester].filter(Boolean).join(" · ");
+    const authors = authorText();
+    $("#footer-credit").innerHTML = authors ? `<b>Rebranding-Roulette</b> · Eine Unterrichtseinheit von ${esc(authors)}` : "<b>Rebranding-Roulette</b>";
+    $("#footer-course").textContent = [CFG.modul, CFG.lehrende, CFG.hochschule, CFG.semester].filter(Boolean).join(" · ");
     const logo = $("#logo");
     const sources = (CFG.logo || []).slice();
     const tryNext = () => {
@@ -619,6 +628,7 @@
             <a class="btn primary lg" href="#auslosung">${ICON.shuffle} Zur Auslosung</a>
             <button type="button" class="btn lg" data-action="scroll-join">Arbeitsbereich öffnen</button>
           </div>
+          ${authorText() ? `<p class="byline">Eine Unterrichtseinheit von <b>${esc(authorText())}</b></p>` : ""}
         </div>
         <div class="demo" aria-hidden="true">
           <div class="demo-strip">${[1, 2, 3, 4, 5].map((n) => `<span style="background:${swVar(n)}"></span>`).join("")}</div>

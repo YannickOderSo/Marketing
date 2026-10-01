@@ -6,10 +6,11 @@ window.RR_CONFIG = {
   modul: "Strategisches Marketing",
   lehrende: "Prof. Arend-Fuchs",
   semester: "WiSe 2026/27",
+  autoren: ["Yannick Heisler", "Elias Knauber"],
 
-  // Offizielles Logo als Datei in den Ordner assets/ legen. Die erste gefundene Datei wird angezeigt.
+  // Logo-Datei(en) im Ordner assets/. Die erste gefundene Datei wird angezeigt.
   // Ohne Logo-Datei erscheint der Name der Hochschule als Schriftzug.
-  logo: ["assets/hskl-logo.svg", "assets/hskl-logo.png"],
+  logo: ["assets/hskl-logo.png"],
 
   standardGruppen: 5,
   maxGruppen: 10,
