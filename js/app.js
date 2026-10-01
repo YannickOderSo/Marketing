@@ -19,7 +19,7 @@
   const DATA = window.RR_DATA || { brands: "", targets: "", avoid: {} };
   const AVOID = DATA.avoid || {};
   const PREFIX = "rebranding-roulette:";
-  const SWATCH_HEX = ["#FF7A59", "#FFC53D", "#34C6B8", "#B794FF", "#92D650", "#FF92C8", "#5BB8FF", "#F4A261", "#D4DE5A", "#A3ADFF"];
+  const SWATCH_HEX = ["#4CC9F0", "#B4D838", "#FF8A65", "#FFD23F", "#A78BFA", "#3DDC97", "#FF8FCF", "#FFA94D", "#7AB8FF", "#D9C8A9"];
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -618,48 +618,71 @@
     </article>`;
   }
 
+  // Konzentrische Bögen in den Farben des HS-KL-Logos, als drehendes Roulette-Motiv.
+  function ringsSvg(cls = "") {
+    const colors = ["#90BC20", "#5DAA35", "#008F57", "#007A60", "#08626C", "#2D848E", "#3DA8BE", "#1BBDED"];
+    const c = 200;
+    const rings = colors.map((col, i) => {
+      const r = 38 + i * 21;
+      const circ = 2 * Math.PI * r;
+      const a = circ * (0.3 + ((i * 37) % 26) / 100);
+      const gap = circ * 0.1;
+      const b = a * 0.4;
+      const rest = Math.max(1, circ - a - gap - b);
+      return `<g class="ring${i % 2 ? " rev" : ""}" style="--dur:${22 + i * 7}s"><circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${col}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${a.toFixed(1)} ${gap.toFixed(1)} ${b.toFixed(1)} ${rest.toFixed(1)}" transform="rotate(${(i * 53) % 360} ${c} ${c})"/></g>`;
+    }).join("");
+    return `<svg class="rings${cls ? " " + cls : ""}" viewBox="0 0 400 400" aria-hidden="true" focusable="false"><circle cx="${c}" cy="${c}" r="17" fill="none" stroke="#90BC20" stroke-width="11"/>${rings}</svg>`;
+  }
+  function boostRings(on) {
+    $$(".rings .ring").forEach((el) => {
+      if (!el.getAnimations) return;
+      el.getAnimations().forEach((a) => {
+        try { if (a.updatePlaybackRate) a.updatePlaybackRate(on ? 10 : 1); else a.playbackRate = on ? 10 : 1; } catch (e) { /* ignorieren */ }
+      });
+    });
+  }
+
   function renderStart() {
     currentView = "start";
     const list = listWorkspaces();
+    const authors = authorText();
     app.innerHTML = `
       <section class="hero">
-        <div class="hero-text">
-          <p class="eyebrow">${esc(CFG.modul)}${CFG.lehrende ? " · " + esc(CFG.lehrende) : ""}</p>
-          <h1 class="display">Rebranding-<wbr>Roulette</h1>
-          <p class="lead">Jede Gruppe zieht eine bekannte Marke und eine neue Zielgruppe, die bisher nicht zur Marke gehört. In acht Feldern entwickelt ihr zu zweit das Rebranding, gestaltet mit KI ein neues Logo und stellt alles am Ende als Pitch vor.</p>
+        <div class="hero-copy">
+          <p class="kicker">${esc([CFG.modul, CFG.lehrende, CFG.semester].filter(Boolean).join(" · "))}</p>
+          <h1 class="display">Rebranding-<wbr><span class="hl">Roulette</span></h1>
+          <p class="lead">Jede Gruppe zieht eine bekannte Marke und eine Zielgruppe, die bisher gar nicht zu ihr passt. In acht Feldern entwickelt ihr zu zweit das Rebranding, gestaltet mit KI ein neues Logo und pitcht am Ende eure Idee.</p>
           <div class="hero-actions">
-            <a class="btn primary lg" href="#auslosung">${ICON.shuffle} Zur Auslosung</a>
-            <button type="button" class="btn lg" data-action="scroll-join">Arbeitsbereich öffnen</button>
+            <a class="btn lime lg" href="#auslosung">${ICON.shuffle} Zur Auslosung</a>
+            <button type="button" class="btn ghost lg" data-action="scroll-join">Arbeitsbereich öffnen</button>
           </div>
-          ${authorText() ? `<p class="byline">Eine Unterrichtseinheit von <b>${esc(authorText())}</b></p>` : ""}
+          ${authors ? `<p class="byline">Eine Unterrichtseinheit von <b>${esc(authors)}</b></p>` : ""}
         </div>
-        <div class="demo" aria-hidden="true">
-          <div class="demo-strip">${[1, 2, 3, 4, 5].map((n) => `<span style="background:${swVar(n)}"></span>`).join("")}</div>
-          <div class="demo-body">
-            <div class="demo-slot"><span class="label">Marke</span><span class="demo-name" id="demo-brand">Haribo</span></div>
-            <span class="demo-arrow">${ICON.arrowDown}</span>
-            <div class="demo-slot demo-target"><span class="label">Neue Zielgruppe</span><span class="demo-name" id="demo-target">Fitness-Bubble</span></div>
+        <div class="hero-visual" aria-hidden="true">
+          ${ringsSvg()}
+          <div class="ticket">
+            <div class="ticket-row demo-slot"><span class="ticket-label">Marke</span><span class="demo-name" id="demo-brand">Haribo</span></div>
+            <div class="ticket-row demo-slot"><span class="ticket-label">Neue Zielgruppe</span><span class="demo-name to" id="demo-target">Fitness-Bubble</span></div>
           </div>
-          <div class="demo-foot">Zum Beispiel Süßigkeiten für die Fitness-Bubble</div>
         </div>
       </section>
 
       <section class="flow" aria-labelledby="flow-h">
-        <h2 id="flow-h">So läuft die Stunde ab</h2>
+        <h2 id="flow-h" class="section-title">So läuft die Stunde ab</h2>
         <ol class="flow-steps">
-          <li><h3>Auslosen</h3><p>Am Beamer bekommt jede Gruppe zufällig eine Marke und eine neue Zielgruppe.</p></li>
-          <li><h3>Arbeitsbereich öffnen</h3><p>Per QR-Code oder Klick landet jede Gruppe in ihrem eigenen Arbeitsbereich.</p></li>
-          <li><h3>Felder bearbeiten</h3><p>Vom Markensteuerrad über Persona und Positionierung bis zum Marketing-Mix und einem KI-Logo. Alles speichert automatisch.</p></li>
-          <li><h3>Pitchen</h3><p>Das Pitch-Board fasst eure Ergebnisse auf einer Seite zusammen, bereit für ${CFG.pitchMinuten} Minuten Präsentation.</p></li>
+          <li class="tile-cyan"><span class="flow-num">01</span><h3>Auslosen</h3><p>Am Beamer zieht jede Gruppe ihr Los: eine Marke und eine neue Zielgruppe.</p></li>
+          <li class="tile-teal"><span class="flow-num">02</span><h3>Arbeitsbereich öffnen</h3><p>Per QR-Code oder Klick landet jede Gruppe in ihrem eigenen Arbeitsbereich.</p></li>
+          <li class="tile-green"><span class="flow-num">03</span><h3>Felder bearbeiten</h3><p>Markensteuerrad, Persona, Positionierung, 4P und ein KI-Logo. Alles speichert automatisch.</p></li>
+          <li class="tile-lime"><span class="flow-num">04</span><h3>Pitchen</h3><p>Das Pitch-Board bündelt alles auf einer Seite, bereit für ${CFG.pitchMinuten} Minuten Bühne.</p></li>
         </ol>
       </section>
 
       <section class="entry" id="oeffnen">
-        <div class="panel">
+        <div class="entry-lead">
           <div class="field">
             <p class="eyebrow">Für die Stundenleitung</p>
             <h2>Auslosung am Beamer</h2>
-            <p class="muted">Gruppen anlegen, Marken und Zielgruppen auslosen, QR-Codes zeigen und die Arbeitsphase mit dem Timer begleiten.</p>
+            <p>Gruppen anlegen, Marken und Zielgruppen auslosen, QR-Codes zeigen und die Arbeitsphase mit dem Timer begleiten.</p>
           </div>
           <div class="row"><a class="btn primary" href="#auslosung">${ICON.shuffle} Auslosung starten</a></div>
         </div>
@@ -667,7 +690,7 @@
       </section>
 
       ${list.length ? `<section class="flow" aria-labelledby="saved-h">
-        <h2 id="saved-h">Auf diesem Gerät gespeichert</h2>
+        <h2 id="saved-h" class="section-title">Auf diesem Gerät gespeichert</h2>
         <div class="ws-list">${list.map(wsCardHtml).join("")}</div>
       </section>` : ""}`;
     startDemo();
@@ -704,13 +727,14 @@
   function renderDraw() {
     currentView = "draw";
     app.innerHTML = `
-      <section class="view-head">
-        <p class="eyebrow">${esc(CFG.modul)} · Auslosung</p>
-        <h1 class="h-view">Wer bekommt welche Marke?</h1>
-        <p class="lead">Lost für jede Gruppe eine Marke und eine neue Zielgruppe aus. Tragt danach die Namen ein und zeigt die QR-Codes. So landet jede Gruppe direkt in ihrem Arbeitsbereich.</p>
-      </section>
-
-      <div class="toolbar">
+      <section class="stage">
+        <div class="stage-copy">
+          <p class="kicker">${esc(CFG.modul)} · Auslosung</p>
+          <h1 class="h-view">Wer bekommt welche Marke?</h1>
+          <p class="lead">Lost für jede Gruppe eine Marke und eine neue Zielgruppe aus. Tragt danach die Namen ein und zeigt die QR-Codes. So landet jede Gruppe direkt in ihrem Arbeitsbereich.</p>
+        </div>
+        <div class="stage-rings">${ringsSvg()}</div>
+        <div class="stage-bar">
         <div class="tool-group">
           <div class="stepper">
             <span class="label" id="lbl-groups">Gruppen</span>
@@ -718,13 +742,14 @@
             <output id="grp-count" aria-labelledby="lbl-groups">${groups.length}</output>
             <button type="button" data-action="grp-plus" id="grp-plus" aria-label="Eine Gruppe mehr">+</button>
           </div>
-          <button type="button" class="btn primary" data-action="draw-all" id="draw-all">${ICON.shuffle} Alle auslosen</button>
-          <button type="button" class="btn" data-action="qr-all">${ICON.qr} QR-Codes zeigen</button>
-          <button type="button" class="btn" data-action="copy-result">${ICON.copy} Ergebnis kopieren</button>
-          <button type="button" class="btn" data-action="fullscreen"${document.fullscreenEnabled ? "" : " hidden"}>${ICON.expand} <span>Vollbild</span></button>
+          <button type="button" class="btn lime" data-action="draw-all" id="draw-all">${ICON.shuffle} Alle auslosen</button>
+          <button type="button" class="btn ghost" data-action="qr-all">${ICON.qr} QR-Codes</button>
+          <button type="button" class="btn ghost" data-action="copy-result">${ICON.copy} Kopieren</button>
+          <button type="button" class="btn ghost" data-action="fullscreen"${document.fullscreenEnabled ? "" : " hidden"}>${ICON.expand} <span>Vollbild</span></button>
         </div>
         ${timerHtml(drawTimer, "Arbeitsphase", [10, 15, 20, 30, 45, 60, 90])}
-      </div>
+        </div>
+      </section>
 
       <ol class="groups" id="groups" aria-label="Auslosung der Gruppen"></ol>
 
@@ -820,6 +845,7 @@
 
   async function animateSlots(jobs) {
     setBusy(true);
+    if (!reduceMotion.matches) boostRings(true);
     const brandNames = pool.brands.map((b) => b.name);
     const targetNames = pool.targets.map((t) => t.name);
     const list = $("#groups");
@@ -829,6 +855,7 @@
       const slot = row.querySelector(kind === "brand" ? ".slot-brand" : ".slot-target");
       return spin(slot.querySelector(".slot-name"), slot, kind === "brand" ? brandNames : targetNames, ms);
     }));
+    boostRings(false);
     setBusy(false);
   }
 
