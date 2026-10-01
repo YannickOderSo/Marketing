@@ -20,11 +20,14 @@ Alle Eingaben werden automatisch im Browser des jeweiligen Geräts gespeichert (
 
 ## Online stellen (für die QR-Codes)
 
-Die QR-Codes funktionieren nur, wenn die Seite unter einer Internetadresse erreichbar ist. Am einfachsten mit GitHub Pages:
+Die QR-Codes funktionieren nur, wenn die Seite unter einer Internetadresse erreichbar ist. Das Repository ist öffentlich, daher geht das kostenlos mit GitHub Pages:
 
-1. Im Repository auf **Settings → Pages** gehen.
-2. Unter „Build and deployment“ als Quelle **Deploy from a branch** wählen, den Branch mit dieser Seite und den Ordner `/ (root)` auswählen.
-3. Nach ein bis zwei Minuten ist die Seite unter `https://<benutzername>.github.io/Marketing/` erreichbar.
+1. [Settings → Pages](https://github.com/YannickOderSo/Marketing/settings/pages) öffnen.
+2. Unter „Build and deployment“ bei **Source** „Deploy from a branch“ wählen.
+3. Bei **Branch** `claude/inspiring-brahmagupta-p39448` und den Ordner `/ (root)` auswählen, dann **Save**.
+4. Nach ein bis zwei Minuten ist die Seite erreichbar unter **https://yannickoderso.github.io/Marketing/**
+
+Jeder neue Push auf diesen Branch aktualisiert die Seite automatisch. Die Datei `.nojekyll` sorgt dafür, dass GitHub die Dateien unverändert ausliefert.
 
 Lokal lässt sich `index.html` auch direkt im Browser öffnen. Dann öffnen Gruppen ihren Arbeitsbereich über die Startseite statt per QR-Code.
 
