@@ -10,7 +10,7 @@ Online: **https://yannickoderso.github.io/Marketing/**
 
 1. **Auslosung** (am Beamer): Gruppen anlegen (1–10), „Alle auslosen“, Namen eintragen. Einzelne Marken oder Zielgruppen lassen sich neu ziehen. Ein Timer begleitet die Arbeitsphase.
 2. **Arbeitsbereich öffnen**: Jede Gruppe scannt ihren QR-Code („QR-Codes zeigen“) oder wählt auf der Startseite Gruppe, Marke und Zielgruppe aus.
-3. **Sieben Felder bearbeiten**, jeweils mit Leitfragen und Live-Vorschau:
+3. **Acht Felder bearbeiten**, jeweils mit Leitfragen und Live-Vorschau:
    1. Ist-Analyse mit Markensteuerrad nach Esch und Wettbewerbern
    2. Persona der neuen Zielgruppe (Live-Personakarte)
    3. Markenstrategie: Regler für Markenfit und Risiko, Matrix mit Empfehlung, Auswahl aus Repositionierung, Markendehnung, Submarke und neuer Marke
@@ -18,9 +18,10 @@ Online: **https://yannickoderso.github.io/Marketing/**
    5. Positionierung: Positionierungskreuz mit verschiebbaren Punkten und Positionierungsstatement
    6. Marketing-Mix (4P)
    7. Pitch: Name, Claim, Kampagnenmotiv, Farbe und Live-Plakat
+   8. Logo-Studio: Prompt-Baukasten für KI-Bildgeneratoren (Logo-Typ, Stil, Symbol, Farben, Evolution oder Revolution), Prompt auf Englisch oder Deutsch kopieren, Generator öffnen (Copilot, ChatGPT, Gemini, Firefly, Canva) und bis zu sechs Entwürfe hochladen oder mit Strg+V einfügen. Der Favorit erscheint auf Plakat und Pitch-Board.
 4. **Pitch-Board**: Alles auf einer Seite, mit Präsentationsmodus, Pitch-Timer, Export als Text oder Markdown-Datei und Druck als PDF.
 
-Alle Eingaben werden automatisch im Browser des jeweiligen Geräts gespeichert (localStorage). Es werden keine Daten an einen Server geschickt.
+Alle Eingaben werden automatisch im Browser des jeweiligen Geräts gespeichert (localStorage). Es werden keine Daten an einen Server geschickt. Die Bilder entstehen im Bildgenerator, den die Gruppe selbst öffnet. Die Seite schickt keine Prompts weiter.
 
 ## Online stellen (für die QR-Codes)
 

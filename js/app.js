@@ -56,6 +56,9 @@
     qr: svgIcon('<rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/>'),
     download: svgIcon('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>'),
     print: svgIcon('<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/>'),
+    upload: svgIcon('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>'),
+    sparkle: svgIcon('<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>'),
+    external: svgIcon('<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>'),
     bulb: svgIcon('<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>')
   };
 
@@ -75,7 +78,7 @@
     set(key, value) {
       const raw = JSON.stringify(value);
       mem.set(key, raw);
-      try { localStorage.setItem(PREFIX + key, raw); } catch (e) { /* nicht verfügbar */ }
+      try { localStorage.setItem(PREFIX + key, raw); return true; } catch (e) { return false; }
     },
     remove(key) {
       mem.delete(key);
@@ -623,7 +626,7 @@
         <div class="hero-text">
           <p class="eyebrow">${esc(CFG.modul)}${CFG.lehrende ? " · " + esc(CFG.lehrende) : ""}</p>
           <h1 class="display">Rebranding-<wbr>Roulette</h1>
-          <p class="lead">Jede Gruppe zieht eine bekannte Marke und eine neue Zielgruppe, die bisher nicht zur Marke gehört. In sieben Feldern entwickelt ihr zu zweit das Rebranding und stellt es am Ende als Pitch vor.</p>
+          <p class="lead">Jede Gruppe zieht eine bekannte Marke und eine neue Zielgruppe, die bisher nicht zur Marke gehört. In acht Feldern entwickelt ihr zu zweit das Rebranding, gestaltet mit KI ein neues Logo und stellt alles am Ende als Pitch vor.</p>
           <div class="hero-actions">
             <a class="btn primary lg" href="#auslosung">${ICON.shuffle} Zur Auslosung</a>
             <button type="button" class="btn lg" data-action="scroll-join">Arbeitsbereich öffnen</button>
@@ -646,7 +649,7 @@
         <ol class="flow-steps">
           <li><h3>Auslosen</h3><p>Am Beamer bekommt jede Gruppe zufällig eine Marke und eine neue Zielgruppe.</p></li>
           <li><h3>Arbeitsbereich öffnen</h3><p>Per QR-Code oder Klick landet jede Gruppe in ihrem eigenen Arbeitsbereich.</p></li>
-          <li><h3>Felder bearbeiten</h3><p>Vom Markensteuerrad über Persona und Positionierung bis zum Marketing-Mix. Alles speichert automatisch.</p></li>
+          <li><h3>Felder bearbeiten</h3><p>Vom Markensteuerrad über Persona und Positionierung bis zum Marketing-Mix und einem KI-Logo. Alles speichert automatisch.</p></li>
           <li><h3>Pitchen</h3><p>Das Pitch-Board fasst eure Ergebnisse auf einer Seite zusammen, bereit für ${CFG.pitchMinuten} Minuten Präsentation.</p></li>
         </ol>
       </section>
@@ -922,8 +925,9 @@
     { id: "strategie", short: "Strategie" },
     { id: "markenkern", short: "Markenkern" },
     { id: "positionierung", short: "Positionierung" },
-    { id: "mix", short: "Marketing-Mix" },
+    { id: "mix", short: "4P" },
     { id: "pitch", short: "Pitch" },
+    { id: "logo", short: "Logo" },
     { id: "board", short: "Pitch-Board" }
   ];
   const STEP_IDS = STEPS.map((s) => s.id);
@@ -976,7 +980,8 @@
         satz: { zielgruppe: a.target, beduerfnis: "", marke: a.brand, kategorie: "", nutzen: "", wettbewerber: "", rtb: "" }
       },
       mix: { produkt: "", verpackung: "", preisStrategie: "", preis: "", place: [], placeText: "", promotion: [], botschaft: "" },
-      pitch: { name: "", claim: "", motiv: "", gruende: ["", "", ""], farbe: swHex(n) }
+      pitch: { name: "", claim: "", motiv: "", gruende: ["", "", ""], farbe: swHex(n) },
+      logo: { typ: "", stile: [], symbol: "", farben: "", richtung: "", extra: "", sprache: "en", entwuerfe: [], favorit: "" }
     };
   }
   const isPlain = (o) => o && typeof o === "object" && !Array.isArray(o);
@@ -1006,7 +1011,8 @@
     markenkern: (ws) => [...WHEEL.map((w) => ws.markenkern[w.key]), ws.markenkern.worte],
     positionierung: (ws) => { const p = ws.positionierung; return [p.bewegt ? "ja" : "", ...Object.values(p.satz)]; },
     mix: (ws) => { const m = ws.mix; return [m.produkt, m.preisStrategie, m.preis, [...m.place, m.placeText], m.promotion, m.botschaft]; },
-    pitch: (ws) => { const p = ws.pitch; return [p.name, p.claim, p.motiv, p.gruende]; }
+    pitch: (ws) => { const p = ws.pitch; return [p.name, p.claim, p.motiv, p.gruende]; },
+    logo: (ws) => { const l = ws.logo; return [l.typ, l.stile, l.symbol, l.richtung, l.entwuerfe]; }
   };
   function stepProgress(ws, id) {
     const list = CHECKS[id] ? CHECKS[id](ws) : [];
@@ -1028,6 +1034,7 @@
      ===================================================================== */
   let cur = null;
   let saveTimer = null;
+  let saveWarned = false;
 
   function wsKey(n, brand, target) { return `ws:${n}:${brand}|${target}`; }
 
@@ -1085,8 +1092,15 @@
     clearTimeout(saveTimer);
     saveTimer = null;
     if (!cur) return;
-    store.set(cur.key, cur.ws);
+    const ok = store.set(cur.key, cur.ws);
     const el = $("#ws-saved");
+    if (!ok) {
+      if (el) el.textContent = "Nicht dauerhaft gespeichert";
+      if (!saveWarned) toast("Der Browserspeicher ist voll. Löscht alte Logo-Entwürfe oder Arbeitsbereiche.");
+      saveWarned = true;
+      return;
+    }
+    saveWarned = false;
     if (el) el.textContent = `Gespeichert ${new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
   }
   function flushSave() { if (saveTimer) saveNow(); }
@@ -1372,14 +1386,173 @@
     const bg = /^#[0-9a-f]{6}$/i.test(ws.pitch.farbe || "") ? ws.pitch.farbe : swHex(ws.group);
     return `--poster-bg:${bg};--poster-fg:${contrastInk(bg)}`;
   }
+  function favoriteLogo(ws) {
+    const l = ws.logo || {};
+    return (l.entwuerfe || []).find((d) => d.id === l.favorit) || null;
+  }
   function posterHtml(ws) {
     const p = ws.pitch;
-    return `<p class="poster-kicker">${esc(ws.brand)} für ${esc(ws.target)}</p>
+    const fav = favoriteLogo(ws);
+    return `${fav ? `<div class="poster-logo"><img src="${esc(fav.src)}" alt="Logo-Favorit"></div>` : ""}
+      <p class="poster-kicker">${esc(ws.brand)} für ${esc(ws.target)}</p>
       <p class="poster-claim">${esc(p.claim || "Euer Claim")}</p>
       <div class="field">
         <p class="poster-name">${esc(p.name || ws.brand)}</p>
         <div class="poster-foot"><span>Gruppe ${ws.group}</span><span>${esc(ws.team)}</span></div>
       </div>`;
+  }
+
+  /* Logo-Studio */
+  const LOGO_TYPES = [
+    { id: "Wortmarke", en: "a wordmark logo (typography only, no symbol)", de: "eine Wortmarke (nur Schrift, kein Symbol)" },
+    { id: "Bildmarke", en: "a symbol logo (icon only, no text)", de: "eine Bildmarke (nur Symbol, kein Text)" },
+    { id: "Wort-Bildmarke", en: "a combination logo (symbol plus brand name)", de: "eine Wort-Bildmarke (Symbol plus Markenname)" },
+    { id: "Emblem", en: "an emblem logo (brand name inside a badge)", de: "ein Emblem (Markenname in einem Siegel oder Abzeichen)" },
+    { id: "Maskottchen", en: "a mascot logo (friendly character)", de: "ein Maskottchen-Logo (Figur)" }
+  ];
+  const LOGO_STYLES = {
+    minimalistisch: "minimalist", flach: "flat design", geometrisch: "geometric", verspielt: "playful",
+    handgezeichnet: "hand-drawn", retro: "retro", futuristisch: "futuristic", elegant: "elegant",
+    sportlich: "sporty", dynamisch: "dynamic", natürlich: "organic", "3D": "3D"
+  };
+  const LOGO_DIRECTIONS = [
+    { id: "Evolution", label: "Evolution: nah am heutigen Logo", en: "Evolve the current {brand} logo: keep recognisable elements, but modernise it for the new target group.", de: "Entwickelt das heutige {brand}-Logo weiter: Wiedererkennbare Elemente bleiben, der Look wird für die neue Zielgruppe modernisiert." },
+    { id: "Revolution", label: "Revolution: komplett neu", en: "Create a completely new look without reference to the current {brand} logo.", de: "Völlig neuer Look ohne Bezug zum heutigen {brand}-Logo." }
+  ];
+  const LOGO_TOOLS = [
+    ["Microsoft Copilot", "https://copilot.microsoft.com/"],
+    ["ChatGPT", "https://chatgpt.com/"],
+    ["Google Gemini", "https://gemini.google.com/"],
+    ["Adobe Firefly", "https://firefly.adobe.com/"],
+    ["Canva", "https://www.canva.com/"]
+  ];
+  const MAX_DRAFTS = 6;
+
+  function logoPrompt(ws) {
+    const l = ws.logo;
+    const en = l.sprache !== "de";
+    const name = String(ws.pitch.name || ws.brand).trim();
+    const t = targetInfo(ws.target);
+    const info = (t && t.info) || ws.info;
+    const type = LOGO_TYPES.find((x) => x.id === l.typ);
+    const styles = (l.stile || []).map((st) => (en ? LOGO_STYLES[st] || st : st));
+    const words = (ws.markenkern.worte || []).map((w) => String(w || "").trim()).filter(Boolean);
+    const dir = LOGO_DIRECTIONS.find((d) => d.id === l.richtung);
+    const colors = [String(l.farben || "").trim(), ws.pitch.farbe].filter(Boolean).join(", ");
+    const symbol = String(l.symbol || "").trim();
+    const extra = String(l.extra || "").trim();
+    const out = [];
+    if (en) {
+      out.push(`Design ${type ? type.en : "a logo"} for the brand "${name}".`);
+      out.push(`Context: ${ws.brand} is being rebranded for a new target group: ${ws.target}${info ? ` (${info})` : ""}.`);
+      if (words.length) out.push(`The logo should feel: ${words.join(", ")}.`);
+      if (styles.length) out.push(`Style: ${styles.join(", ")}.`);
+      if (symbol) out.push(`Main symbol: ${symbol}.`);
+      if (colors) out.push(`Colors: ${colors}.`);
+      if (dir) out.push(dir.en.replace("{brand}", ws.brand));
+      if (!type || type.id !== "Bildmarke") out.push(`If the logo contains text, spell it exactly "${name}".`);
+      if (extra) out.push(extra);
+      out.push("Clean vector logo, centered on a plain white background, no mockup, high contrast, readable at small sizes.");
+    } else {
+      out.push(`Gestalte ${type ? type.de : "ein Logo"} für die Marke „${name}“.`);
+      out.push(`Hintergrund: ${ws.brand} wird für eine neue Zielgruppe neu ausgerichtet: ${ws.target}${info ? ` (${info})` : ""}.`);
+      if (words.length) out.push(`Das Logo soll wirken: ${words.join(", ")}.`);
+      if (styles.length) out.push(`Stil: ${styles.join(", ")}.`);
+      if (symbol) out.push(`Zentrales Symbol: ${symbol}.`);
+      if (colors) out.push(`Farben: ${colors}.`);
+      if (dir) out.push(dir.de.replace("{brand}", ws.brand));
+      if (!type || type.id !== "Bildmarke") out.push(`Falls das Logo Text enthält, schreibe ihn exakt „${name}“.`);
+      if (extra) out.push(extra);
+      out.push("Sauberes Vektor-Logo, zentriert auf weißem Hintergrund, ohne Mockup, kontrastreich, auch klein gut erkennbar.");
+    }
+    return out.join(" ");
+  }
+
+  function logoGalleryHtml(ws) {
+    const l = ws.logo;
+    if (!l.entwuerfe.length) return `<p class="empty-note">Noch keine Entwürfe. Ladet hier die Bilder aus dem Generator hoch.</p>`;
+    return `<div class="logo-grid">${l.entwuerfe.map((d, i) => {
+      const fav = d.id === l.favorit;
+      return `<figure class="logo-draft${fav ? " fav" : ""}">
+        <div class="logo-img"><img src="${esc(d.src)}" alt="Logo-Entwurf ${i + 1}"></div>
+        <figcaption class="row">
+          <button type="button" class="btn sm${fav ? " primary" : ""}" data-action="logo-fav" data-id="${esc(d.id)}" aria-pressed="${fav}">${fav ? "★ Favorit" : "☆ Favorit"}</button>
+          <button type="button" class="btn sm" data-action="logo-remove" data-id="${esc(d.id)}" aria-label="Entwurf ${i + 1} löschen">Löschen</button>
+        </figcaption>
+      </figure>`;
+    }).join("")}</div>`;
+  }
+  function renderLogoGallery() {
+    const el = $("#logo-gallery");
+    if (el) el.innerHTML = logoGalleryHtml(cur.ws);
+    const count = $("#logo-count");
+    if (count) count.textContent = `${cur.ws.logo.entwuerfe.length} von ${MAX_DRAFTS}`;
+  }
+
+  // Bild verkleinern und als Data-URL speichern, damit es in den Browserspeicher passt.
+  function readImage(file) {
+    return new Promise((resolve, reject) => {
+      if (!file || !/^image\//.test(file.type)) { reject(new Error("type")); return; }
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const max = 640;
+        const scale = Math.min(1, max / Math.max(img.naturalWidth || max, img.naturalHeight || max));
+        const w = Math.max(1, Math.round((img.naturalWidth || max) * scale));
+        const h = Math.max(1, Math.round((img.naturalHeight || max) * scale));
+        const c = document.createElement("canvas");
+        c.width = w;
+        c.height = h;
+        const ctx = c.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        let data = c.toDataURL("image/webp", 0.86);
+        if (!data.startsWith("data:image/webp")) data = c.toDataURL("image/png");
+        if (data.length > 600000) {
+          ctx.globalCompositeOperation = "destination-over";
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fillRect(0, 0, w, h);
+          data = c.toDataURL("image/jpeg", 0.82);
+        }
+        resolve(data);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("load")); };
+      img.src = url;
+    });
+  }
+  async function addLogoFiles(files) {
+    if (!cur) return;
+    const l = cur.ws.logo;
+    const list = Array.from(files || []).filter((f) => /^image\//.test(f.type));
+    if (!list.length) { toast("Bitte eine Bilddatei wählen (PNG, JPG, WebP oder SVG)."); return; }
+    const free = MAX_DRAFTS - l.entwuerfe.length;
+    if (free <= 0) { toast(`Es passen höchstens ${MAX_DRAFTS} Entwürfe hinein. Löscht zuerst einen.`); return; }
+    let added = 0;
+    for (const f of list.slice(0, free)) {
+      try {
+        const src = await readImage(f);
+        const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        l.entwuerfe.push({ id, src });
+        if (!l.favorit) l.favorit = id;
+        added++;
+      } catch (e) { /* Bild nicht lesbar */ }
+    }
+    if (!added) { toast("Das Bild konnte nicht gelesen werden."); return; }
+    if (list.length > free) toast(`Nur ${free} Bild${free === 1 ? "" : "er"} übernommen, mehr passen nicht hinein.`);
+    else toast(added === 1 ? "Entwurf hinzugefügt." : `${added} Entwürfe hinzugefügt.`);
+    renderLogoGallery();
+    touch();
+  }
+  function bindLogoDrop() {
+    const zone = $("#dropzone");
+    if (!zone) return;
+    zone.addEventListener("dragover", (e) => { e.preventDefault(); zone.classList.add("over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("over"));
+    zone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      zone.classList.remove("over");
+      if (e.dataTransfer && e.dataTransfer.files) addLogoFiles(e.dataTransfer.files);
+    });
   }
 
   /* =====================================================================
@@ -1565,10 +1738,55 @@
                 ${SWATCH_HEX.slice(0, 8).map((h) => `<button type="button" class="swatch-btn" style="background:${h}" data-color="${h}" aria-label="Farbe ${h} wählen"></button>`).join("")}
               </div>
             </div>
-            <div class="row"><a class="btn primary" href="#g/${ws.group}/board">Zum Pitch-Board ${ICON.arrow}</a></div>
+            <div class="row"><a class="btn primary" href="#g/${ws.group}/logo">Weiter zum Logo-Studio ${ICON.arrow}</a></div>
           </div>
           <div class="poster" id="poster" aria-label="Plakatvorschau"></div>
         </div>`;
+    },
+
+    logo() {
+      const ws = cur.ws;
+      const l = ws.logo;
+      const lang = l.sprache === "de" ? "de" : "en";
+      return `${intro(8, `Logo-Studio: Wie sieht ${esc(ws.pitch.name || ws.brand)} künftig aus?`, "Stellt mit wenigen Klicks einen Prompt für einen KI-Bildgenerator zusammen, erzeugt dort Logo-Entwürfe und ladet eure Favoriten hier hoch.")}
+        ${tip(`<b>So geht's</b><ol class="howto"><li>Optionen wählen, der Prompt entsteht automatisch.</li><li>Prompt kopieren und in einem Bildgenerator einfügen.</li><li>Das Bild speichern oder kopieren und hier hochladen, hineinziehen oder mit Strg+V einfügen.</li></ol>KI-Generatoren schreiben Text in Logos oft falsch. Lehnt ein Generator den echten Markennamen ab, nutzt euren neuen Produktnamen oder wählt eine Bildmarke.`)}
+        <div class="logo-layout">
+          <div class="panel">
+            ${choiceChipsField("logo.typ", "Logo-Typ", LOGO_TYPES.map((x) => x.id))}
+            ${chipsField("logo.stile", "Stil", Object.keys(LOGO_STYLES), "Mehrfachauswahl möglich")}
+            ${textField("logo.symbol", "Zentrales Symbol oder Motiv", { placeholder: "z. B. Goldbär mit Hantel" })}
+            ${textField("logo.farben", "Farbwelt", { placeholder: "z. B. Neongrün und Schwarz", hint: `Eure Kampagnenfarbe ${ws.pitch.farbe || ""} wird automatisch ergänzt.` })}
+            ${choiceChipsField("logo.richtung", "Richtung", LOGO_DIRECTIONS.map((d) => d.id), LOGO_DIRECTIONS.map((d) => d.label).join(" · "))}
+            ${textField("logo.extra", "Weitere Wünsche", { placeholder: "z. B. runde Form, passt auf eine Snackverpackung" })}
+          </div>
+          <div class="panel prompt-panel">
+            <div class="row prompt-head">
+              <h3>Euer Prompt</h3>
+              <div class="chips" role="group" aria-label="Sprache des Prompts">
+                <button type="button" class="chip-btn" data-set="logo.sprache" data-value="en" aria-pressed="${lang === "en"}">Englisch</button>
+                <button type="button" class="chip-btn" data-set="logo.sprache" data-value="de" aria-pressed="${lang === "de"}">Deutsch</button>
+              </div>
+            </div>
+            <p class="prompt-box" id="logo-prompt"></p>
+            <p class="field-hint">Englische Prompts liefern bei den meisten Generatoren bessere Ergebnisse. Markenwerte kommen aus eurem Markenkern, Name und Farbe aus dem Pitch.</p>
+            <div class="row"><button type="button" class="btn primary" data-action="copy-prompt">${ICON.copy} Prompt kopieren</button></div>
+            <div class="field">
+              <span class="field-label">Bildgenerator öffnen</span>
+              <div class="tool-links">${LOGO_TOOLS.map(([label, url]) => `<a class="btn sm" href="${url}" target="_blank" rel="noopener">${label} ${ICON.external}</a>`).join("")}</div>
+              <span class="field-hint">Öffnet sich in einem neuen Tab. Gebt dort keine persönlichen Daten ein.</span>
+            </div>
+          </div>
+        </div>
+        <section class="panel">
+          <div class="row prompt-head"><h3>Eure Entwürfe</h3><span class="muted" id="logo-count">${l.entwuerfe.length} von ${MAX_DRAFTS}</span></div>
+          <label class="dropzone" id="dropzone" for="logo-file">
+            <input type="file" id="logo-file" accept="image/*" multiple class="sr-only">
+            ${ICON.upload}
+            <span><b>Bild auswählen</b> oder hierher ziehen. Ein kopiertes Bild fügt ihr mit Strg+V bzw. ⌘V ein.</span>
+          </label>
+          <div id="logo-gallery">${logoGalleryHtml(ws)}</div>
+          <p class="field-hint">Der Favorit erscheint auf eurem Plakat und im Pitch-Board.</p>
+        </section>`;
     },
 
     board() {
@@ -1580,6 +1798,7 @@
             <button type="button" class="btn" data-action="copy-board">${ICON.copy} Als Text kopieren</button>
             <button type="button" class="btn" data-action="download-board">${ICON.download} Als Datei speichern</button>
             <button type="button" class="btn" data-action="print">${ICON.print} Drucken / PDF</button>
+            ${favoriteLogo(ws) ? `<button type="button" class="btn" data-action="logo-download">${ICON.download} Logo speichern</button>` : ""}
             ${timerHtml(pitchTimer, "Pitch")}
           </div>
           <div class="board" id="board" style="--sw:${swVar(ws.group)};${posterVars(ws)}">${boardHtml(ws)}</div>
@@ -1597,8 +1816,10 @@
     const list = (arr) => (arr && arr.filter(Boolean).length ? esc(arr.filter(Boolean).join(", ")) : open);
     const worte = (ws.markenkern.worte || []).filter((w) => String(w || "").trim());
     const gruende = (p.gruende || []).filter((g) => String(g || "").trim());
+    const fav = favoriteLogo(ws);
     return `
-      <section class="board-hero">
+      <section class="board-hero${fav ? " has-logo" : ""}">
+        ${fav ? `<div class="board-logo"><img src="${esc(fav.src)}" alt="Logo von ${esc(p.name || ws.brand)}"></div>` : ""}
         <div class="field">
           <p class="poster-kicker">Gruppe ${ws.group}${ws.team ? " · " + esc(ws.team) : ""}</p>
           <p class="poster-claim">${esc(p.claim || "Der Claim fehlt noch")}</p>
@@ -1698,6 +1919,13 @@
     L.push(`- Claim: ${t(ws.pitch.claim)}`);
     L.push(`- Kampagnenmotiv: ${t(ws.pitch.motiv)}`);
     (ws.pitch.gruende || []).filter(Boolean).forEach((g, i) => L.push(`- Grund ${i + 1}: ${g}`));
+    L.push("", "## 8 Logo");
+    L.push(`- Logo-Typ: ${t(ws.logo.typ)}`);
+    L.push(`- Stil: ${t(ws.logo.stile.join(", "))}`);
+    L.push(`- Symbol: ${t(ws.logo.symbol)}`);
+    L.push(`- Richtung: ${t(ws.logo.richtung)}`);
+    L.push(`- Entwürfe: ${ws.logo.entwuerfe.length}${favoriteLogo(ws) ? " (Favorit im Pitch-Board)" : ""}`);
+    L.push("", "Prompt:", "", "> " + logoPrompt(ws));
     return L.join("\n");
   }
   function downloadText(filename, text) {
@@ -1758,6 +1986,7 @@
         </footer>
       </section>`;
     if (step === "positionierung") bindMap();
+    if (step === "logo") bindLogoDrop();
     if (step === "board") pitchTimer.sync();
     refreshLive();
     const active = $(".step-tab[aria-current='step']");
@@ -1825,6 +2054,10 @@
         poster.setAttribute("style", posterVars(cur.ws));
         poster.innerHTML = posterHtml(cur.ws);
       }
+    },
+    logo() {
+      const el = $("#logo-prompt");
+      if (el) el.textContent = logoPrompt(cur.ws);
     }
   };
   function refreshLive() {
@@ -1953,6 +2186,35 @@
       case "copy-board": if (cur) copyText(boardMarkdown(cur.ws), "Pitch-Board als Text kopiert."); break;
       case "download-board": if (cur) downloadText(`gruppe-${cur.ws.group}-${slug(cur.ws.brand)}-rebranding.md`, boardMarkdown(cur.ws)); break;
       case "print": window.print(); break;
+      case "copy-prompt": if (cur) copyText(logoPrompt(cur.ws), "Prompt kopiert. Jetzt im Bildgenerator einfügen."); break;
+      case "logo-fav": {
+        if (!cur) break;
+        cur.ws.logo.favorit = t.dataset.id;
+        renderLogoGallery();
+        touch();
+        break;
+      }
+      case "logo-remove": {
+        if (!cur) break;
+        const l = cur.ws.logo;
+        l.entwuerfe = l.entwuerfe.filter((d) => d.id !== t.dataset.id);
+        if (l.favorit === t.dataset.id) l.favorit = l.entwuerfe.length ? l.entwuerfe[0].id : "";
+        renderLogoGallery();
+        touch();
+        break;
+      }
+      case "logo-download": {
+        const fav = cur && favoriteLogo(cur.ws);
+        if (!fav) break;
+        const ext = (/^data:image\/(\w+)/.exec(fav.src) || [])[1] || "png";
+        const a = document.createElement("a");
+        a.href = fav.src;
+        a.download = `logo-${slug(cur.ws.pitch.name || cur.ws.brand)}.${ext === "jpeg" ? "jpg" : ext}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        break;
+      }
       default: break;
     }
   });
@@ -1978,6 +2240,7 @@
   document.addEventListener("change", (e) => {
     const el = e.target;
     if (el.id === "draw-timer-min") { drawTimer.setMinutes(Number(el.value)); return; }
+    if (el.id === "logo-file") { addLogoFiles(el.files).then(() => { el.value = ""; }); return; }
     if (el.id === "join-group") {
       const g = groups[Number(el.value) - 1];
       if (g) {
@@ -2000,6 +2263,14 @@
       const arr = getPath(cur.ws, path) || [];
       if (arr.length) removeTag(path, arr[arr.length - 1]);
     }
+  });
+
+  document.addEventListener("paste", (e) => {
+    if (!cur || currentView !== "ws" || cur.step !== "logo" || !e.clipboardData) return;
+    const files = Array.from(e.clipboardData.files || []).filter((f) => /^image\//.test(f.type));
+    if (!files.length) return;
+    e.preventDefault();
+    addLogoFiles(files);
   });
 
   document.addEventListener("submit", (e) => {
