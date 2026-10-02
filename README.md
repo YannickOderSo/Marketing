@@ -19,7 +19,11 @@ Online: **https://yannickoderso.github.io/Marketing/**
    6. Marketing-Mix (4P)
    7. Pitch: Name, Claim, Kampagnenmotiv, Farbe und Live-Plakat
    8. Logo-Studio: Prompt-Baukasten für KI-Bildgeneratoren (Logo-Typ, Stil, Symbol, Farben, Evolution oder Revolution), Prompt auf Englisch oder Deutsch kopieren, Generator öffnen (Copilot, ChatGPT, Gemini, Firefly, Canva) und bis zu sechs Entwürfe hochladen oder mit Strg+V einfügen. Der Favorit erscheint auf Plakat und Pitch-Board.
-4. **Pitch-Board**: Alles auf einer Seite, mit Präsentationsmodus, Pitch-Timer, Export als Text oder Markdown-Datei und Druck als PDF.
+4. **Pitch-Board**: Alles auf einer Seite, mit Export als Text oder Markdown-Datei und Druck als PDF.
+5. **Pitch als Folien**: „Als Folien präsentieren“ macht aus dem Pitch-Board acht Vollbild-Folien (Titel, Ausgangslage, Persona, Strategie und Markenkern, Positionierung, 4P, Kampagne, Abschluss) mit Pitch-Timer.
+   - Weiter: Pfeil rechts, Leertaste, Bild runter (Presenter-Klicker), Klick auf die Folie oder Wischen
+   - Zurück: Pfeil links oder Bild hoch; Pos1/Ende springen zur ersten/letzten Folie; F schaltet Vollbild
+   - Esc beendet die Präsentation; das Drucker-Symbol gibt alle Folien im Querformat als PDF aus
 
 Alle Eingaben werden automatisch im Browser des jeweiligen Geräts gespeichert (localStorage). Es werden keine Daten an einen Server geschickt. Die Bilder entstehen im Bildgenerator, den die Gruppe selbst öffnet. Die Seite schickt keine Prompts weiter.
 

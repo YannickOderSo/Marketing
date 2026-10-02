@@ -59,6 +59,8 @@
     upload: svgIcon('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>'),
     sparkle: svgIcon('<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>'),
     external: svgIcon('<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>'),
+    slides: svgIcon('<path d="M2 3h20"/><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"/><path d="m7 21 5-5 5 5"/>'),
+    close: svgIcon('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'),
     bulb: svgIcon('<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>')
   };
 
@@ -309,22 +311,22 @@
     }
     toggle() { if (this.state === "running") this.pause(); else this.start(); }
     sync() {
-      const el = document.getElementById(this.id);
-      if (!el) return;
-      el.dataset.state = this.state;
-      const display = document.getElementById(this.id + "-display");
-      if (display) display.textContent = fmt(this.remaining);
-      const toggle = document.getElementById(this.id + "-toggle");
-      if (toggle) {
-        const running = this.state === "running";
-        toggle.innerHTML = running ? ICON.pause : ICON.play;
-        toggle.setAttribute("aria-label", running ? "Timer pausieren" : "Timer starten");
-      }
-      const sel = document.getElementById(this.id + "-min");
-      if (sel) {
-        sel.disabled = this.state === "running" || this.state === "paused";
-        sel.value = String(Math.round(this.total / 60000));
-      }
+      const running = this.state === "running";
+      $$(`[data-timer-root="${this.id}"]`).forEach((el) => {
+        el.dataset.state = this.state;
+        const display = el.querySelector(".timer-display");
+        if (display) display.textContent = fmt(this.remaining);
+        const toggle = el.querySelector('[data-timer-action="toggle"]');
+        if (toggle) {
+          toggle.innerHTML = running ? ICON.pause : ICON.play;
+          toggle.setAttribute("aria-label", running ? "Timer pausieren" : "Timer starten");
+        }
+        const sel = el.querySelector("select");
+        if (sel) {
+          sel.disabled = this.state === "running" || this.state === "paused";
+          sel.value = String(Math.round(this.total / 60000));
+        }
+      });
     }
   }
   const drawTimer = new Countdown("draw-timer", 30, "Die Arbeitsphase ist vorbei.");
@@ -333,13 +335,13 @@
 
   function timerHtml(cd, label, options) {
     const minutes = Math.round(cd.total / 60000);
-    return `<div class="timer" id="${cd.id}" data-state="${cd.state}">
+    return `<div class="timer" data-timer-root="${cd.id}" data-state="${cd.state}">
       ${options
         ? `<label class="label" for="${cd.id}-min">${esc(label)}</label>
            <select class="select" id="${cd.id}-min">${options.map((m) => `<option value="${m}"${m === minutes ? " selected" : ""}>${m} min</option>`).join("")}</select>`
         : `<span class="label">${esc(label)}</span>`}
-      <span class="timer-display" id="${cd.id}-display" role="timer">${fmt(cd.remaining)}</span>
-      <button type="button" class="icon-btn primary" id="${cd.id}-toggle" data-timer="${cd.id}" data-timer-action="toggle" aria-label="Timer starten">${ICON.play}</button>
+      <span class="timer-display" role="timer">${fmt(cd.remaining)}</span>
+      <button type="button" class="icon-btn primary" data-timer="${cd.id}" data-timer-action="toggle" aria-label="Timer starten">${ICON.play}</button>
       <button type="button" class="icon-btn" data-timer="${cd.id}" data-timer-action="reset" aria-label="Timer zurücksetzen">${ICON.reset}</button>
     </div>`;
   }
@@ -404,6 +406,13 @@
     $$("[data-action='present'] span").forEach((s) => { s.textContent = on ? "Präsentation beenden" : "Präsentieren"; });
   }
   document.addEventListener("fullscreenchange", updateFsLabels);
+  // Esc im Vollbild beendet die Präsentation, der Vollbild-Knopf schaltet nur um.
+  document.addEventListener("fullscreenchange", () => {
+    if (!deck || document.fullscreenElement || !deck.wasFull) return;
+    deck.wasFull = false;
+    if (deck.keepOnExit) { deck.keepOnExit = false; return; }
+    closeDeck();
+  });
 
   /* =====================================================================
      Links und QR-Codes
@@ -493,6 +502,7 @@
   }
 
   function route() {
+    closeDeck(true);
     flushSave();
     viewCleanup.forEach((fn) => { try { fn(); } catch (e) { /* ignorieren */ } });
     viewCleanup = [];
@@ -1818,10 +1828,10 @@
 
     board() {
       const ws = cur.ws;
-      return `${intro(0, "Pitch-Board", `Alle Felder auf einer Seite. Präsentiert direkt von hier, der Timer steht auf ${CFG.pitchMinuten} Minuten.`)}
+      return `${intro(0, "Pitch-Board", `Alle Felder auf einer Seite. Für den Pitch macht die Seite daraus Folien im Vollbild, mit ${CFG.pitchMinuten}-Minuten-Timer.`)}
         <div class="board-stage" id="board-stage">
           <div class="board-actions">
-            <button type="button" class="btn primary" data-action="present">${ICON.expand} <span>Präsentieren</span></button>
+            <button type="button" class="btn primary" data-action="slides">${ICON.slides} Als Folien präsentieren</button>
             <button type="button" class="btn" data-action="copy-board">${ICON.copy} Als Text kopieren</button>
             <button type="button" class="btn" data-action="download-board">${ICON.download} Als Datei speichern</button>
             <button type="button" class="btn" data-action="print">${ICON.print} Drucken / PDF</button>
@@ -2116,11 +2126,296 @@
   }
 
   /* =====================================================================
+     Pitch-Folien
+     ===================================================================== */
+  let deck = null;
+
+  function deckSlides(ws) {
+    const p = ws.pitch;
+    const s = ws.strategie;
+    const st = STRAT_BY_ID[s.wahl];
+    const m = ws.mix;
+    const per = ws.persona;
+    const fav = favoriteLogo(ws);
+    const name = String(p.name || ws.brand).trim();
+    const claim = String(p.claim || "").trim();
+    const open = `<span class="d-empty">noch offen</span>`;
+    const v = (x) => (x && String(x).trim() ? esc(String(x).trim()) : open);
+    const b = brandInfo(ws.brand);
+    const t = targetInfo(ws.target);
+    const heute = ws.analyse.zielgruppeHeute || (b && b.heute) || ws.heute;
+    const info = (t && t.info) || ws.info;
+    const worte = (ws.markenkern.worte || []).map((w) => String(w || "").trim()).filter(Boolean);
+    const gruende = (p.gruende || []).map((g) => String(g || "").trim()).filter(Boolean);
+    const team = ws.team ? ` · ${esc(ws.team)}` : "";
+    const logo = (cls = "") => (fav ? `<div class="d-logo ${cls}"><img src="${esc(fav.src)}" alt="Logo ${esc(name)}"></div>` : "");
+    const chips = (arr) => {
+      const items = (arr || []).map((x) => String(x || "").trim()).filter(Boolean);
+      return items.length ? `<div class="d-chips">${items.map((x) => `<span>${esc(x)}</span>`).join("")}</div>` : open;
+    };
+    const list = (txt) => {
+      const items = linesOf(txt);
+      return items.length ? `<ul class="d-list">${items.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : open;
+    };
+    const head = (kicker, title) => `<header class="d-head"><p class="d-kicker">${kicker}</p><h2 class="d-title">${title}</h2></header>`;
+    const initials = String(per.name || "").split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0].toUpperCase()).join("") || "?";
+    const price = [m.preisStrategie, m.preis].map((x) => String(x || "").trim()).filter(Boolean);
+    const comps = ws.analyse.wettbewerber || [];
+
+    return [
+      { label: "Titel", tone: "poster", html: `
+        <div class="d-cover">
+          ${logo("d-logo-lg")}
+          <p class="d-kicker">Gruppe ${ws.group}${team}</p>
+          <h2 class="d-claim">${esc(claim || name)}</h2>
+          <p class="d-sub">${claim ? `${esc(name)} · ` : ""}${esc(ws.brand)} für ${esc(ws.target)}</p>
+        </div>` },
+      { label: "Ausgangslage", html: `
+        ${head("Ausgangslage", `Von ${esc(ws.brand)} zu ${esc(ws.target)}`)}
+        <div class="d-split d-split-arrow">
+          <div class="d-card">
+            <p class="d-label">Heute</p>
+            <p class="d-big">${esc(ws.brand)}</p>
+            <dl class="d-kv">
+              <dt>Zielgruppe</dt><dd>${v(heute)}</dd>
+              <dt>Markenkern</dt><dd>${v(ws.analyse.heute.kompetenz)}</dd>
+              <dt>Wettbewerber</dt><dd>${comps.length ? esc(comps.join(", ")) : open}</dd>
+            </dl>
+          </div>
+          <div class="d-arrow">${ICON.arrow}</div>
+          <div class="d-card d-card-accent">
+            <p class="d-label">Neue Zielgruppe</p>
+            <p class="d-big">${esc(ws.target)}</p>
+            ${info ? `<p class="d-text">${esc(info)}</p>` : ""}
+          </div>
+        </div>` },
+      { label: "Zielgruppe", html: `
+        ${head("Zielgruppe", per.name ? `Das ist ${esc(per.name)}` : "Unsere Persona")}
+        <div class="d-persona">
+          <div class="d-persona-id">
+            <span class="d-avatar">${esc(initials)}</span>
+            <p class="d-big">${esc(per.name || "Name fehlt")}</p>
+            <p class="d-text">${esc(per.alter)} Jahre${per.alltag ? ` · ${esc(per.alltag)}` : ""}</p>
+            ${per.zitat ? `<blockquote class="d-quote">${esc(per.zitat)}</blockquote>` : ""}
+          </div>
+          <div class="d-cols">
+            <div><p class="d-label">Bedürfnisse</p>${list(per.beduerfnisse)}</div>
+            <div><p class="d-label">Pain Points</p>${list(per.painpoints)}</div>
+            <div><p class="d-label">Kaufmotive</p>${chips(per.motive)}</div>
+            <div><p class="d-label">Mediennutzung</p>${chips(per.medien)}</div>
+          </div>
+        </div>` },
+      { label: "Strategie", html: `
+        ${head("Strategie und Markenkern", st ? esc(st.title) : "Unsere Markenstrategie")}
+        <div class="d-split">
+          <div class="d-stack">
+            ${st ? `<p class="d-lead">${esc(st.desc)}</p>` : open}
+            ${s.begruendung ? `<p class="d-text">${esc(s.begruendung)}</p>` : ""}
+          </div>
+          <div class="d-stack">
+            <p class="d-label">Markenkern in drei Worten</p>
+            ${worte.length ? `<div class="d-words">${worte.map((w) => `<span>${esc(w)}</span>`).join("")}</div>` : open}
+            <dl class="d-kv">
+              <dt>Wer sind wir?</dt><dd>${v(ws.markenkern.kompetenz)}</dd>
+              <dt>Wie sind wir?</dt><dd>${v(ws.markenkern.tonalitaet)}</dd>
+            </dl>
+          </div>
+        </div>` },
+      { label: "Positionierung", html: `
+        ${head("Positionierung", "Hier stehen wir im Markt")}
+        <div class="d-split d-split-map">
+          <div class="d-map">${mapSvg(ws, false)}</div>
+          <p class="d-statement">${statementHtml(ws)}</p>
+        </div>` },
+      { label: "Marketing-Mix", html: `
+        ${head("Marketing-Mix", "So kommt die Idee auf den Markt")}
+        <div class="d-4p">
+          <div class="d-p"><span class="d-p-letter">P</span><p class="d-label">Product</p><p class="d-text">${v(m.produkt)}</p>${m.verpackung ? `<p class="d-small">${esc(m.verpackung)}</p>` : ""}</div>
+          <div class="d-p"><span class="d-p-letter">P</span><p class="d-label">Price</p><p class="d-text">${price.length ? esc(price.join(" · ")) : open}</p></div>
+          <div class="d-p"><span class="d-p-letter">P</span><p class="d-label">Place</p>${chips([...m.place, m.placeText])}</div>
+          <div class="d-p"><span class="d-p-letter">P</span><p class="d-label">Promotion</p>${chips(m.promotion)}${m.botschaft ? `<p class="d-small">Kernbotschaft: ${esc(m.botschaft)}</p>` : ""}</div>
+        </div>` },
+      { label: "Kampagne", html: `
+        ${head("Kampagne", "Warum das funktioniert")}
+        <div class="d-split d-split-campaign">
+          <div class="d-poster">
+            ${logo()}
+            <p class="d-poster-claim">${esc(claim || "Claim fehlt noch")}</p>
+            <p class="d-poster-name">${esc(name)}</p>
+          </div>
+          <div class="d-stack">
+            <p class="d-label">Kampagnenmotiv</p>
+            <p class="d-text">${v(p.motiv)}</p>
+            <p class="d-label">Drei Gründe</p>
+            ${gruende.length ? `<ol class="d-reasons">${gruende.map((g) => `<li>${esc(g)}</li>`).join("")}</ol>` : open}
+          </div>
+        </div>` },
+      { label: "Abschluss", tone: "stage", html: `
+        ${ringsSvg("d-rings")}
+        <div class="d-cover d-end">
+          ${logo("d-logo-lg")}
+          <h2 class="d-claim">${esc(claim || name)}</h2>
+          <p class="d-sub">Danke! Jetzt seid ihr dran: Fragen und Feedback?</p>
+          <p class="d-kicker">Gruppe ${ws.group}${team}</p>
+        </div>` }
+    ];
+  }
+
+  function openDeck(start = 0) {
+    if (!cur) return;
+    closeDeck(true);
+    const ws = cur.ws;
+    const slides = deckSlides(ws);
+    const footName = `${ws.pitch.name || ws.brand} · Gruppe ${ws.group}`;
+    const el = document.createElement("div");
+    el.className = "deck";
+    el.id = "deck";
+    el.tabIndex = -1;
+    el.setAttribute("role", "dialog");
+    el.setAttribute("aria-modal", "true");
+    el.setAttribute("aria-label", "Pitch-Folien");
+    el.setAttribute("style", `--sw:${swVar(ws.group)};${posterVars(ws)}`);
+    el.innerHTML = `
+      <div class="deck-stage">
+        <div class="slide-frame">
+          ${slides.map((sl, i) => `<section class="slide${sl.tone ? ` tone-${sl.tone}` : ""}" role="group" aria-roledescription="Folie" aria-label="${i + 1} von ${slides.length}: ${esc(sl.label)}">
+            <div class="slide-body">${sl.html}</div>
+            <footer class="d-foot"><span>${esc(footName)}</span><span>${i + 1} / ${slides.length}</span></footer>
+          </section>`).join("")}
+        </div>
+        <button type="button" class="deck-hit deck-hit-prev" data-deck="prev" tabindex="-1" aria-hidden="true"></button>
+        <button type="button" class="deck-hit deck-hit-next" data-deck="next" tabindex="-1" aria-hidden="true"></button>
+        <p class="deck-rotate">Für die Präsentation das Gerät quer halten.</p>
+      </div>
+      <div class="deck-bar">
+        <div class="deck-nav">
+          <button type="button" class="icon-btn" data-deck="prev" aria-label="Vorherige Folie">${ICON.back}</button>
+          <span class="deck-count" id="deck-count" aria-live="polite"></span>
+          <button type="button" class="icon-btn" data-deck="next" aria-label="Nächste Folie">${ICON.arrow}</button>
+        </div>
+        <div class="deck-dots">${slides.map((sl, i) => `<button type="button" class="deck-dot" data-deck-go="${i}" aria-label="Folie ${i + 1}: ${esc(sl.label)}"></button>`).join("")}</div>
+        <div class="deck-tools">
+          ${timerHtml(pitchTimer, "Pitch")}
+          <button type="button" class="icon-btn" data-deck="fullscreen" aria-label="Vollbild ein- oder ausschalten">${ICON.expand}</button>
+          <button type="button" class="icon-btn" data-deck="print" aria-label="Folien drucken oder als PDF speichern">${ICON.print}</button>
+          <button type="button" class="icon-btn" data-deck="close" aria-label="Folien schließen">${ICON.close}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(el);
+    document.body.classList.add("deck-open");
+    [".site-header", "#app", ".site-footer"].forEach((sel) => { const n = $(sel); if (n) n.inert = true; });
+    deck = { el, index: 0, count: slides.length, returnFocus: document.activeElement, idleTimer: null, lastSwipe: 0 };
+    goSlide(start);
+    pitchTimer.sync();
+    el.focus();
+    if (document.fullscreenEnabled) el.requestFullscreen().then(() => { if (deck) deck.wasFull = true; }).catch(() => {});
+    bindDeckGestures(el);
+  }
+
+  function goSlide(i) {
+    if (!deck) return;
+    const n = clamp(i, 0, deck.count - 1);
+    deck.index = n;
+    $$(".slide", deck.el).forEach((sl, k) => {
+      sl.classList.toggle("is-active", k === n);
+      sl.classList.toggle("is-before", k < n);
+      sl.setAttribute("aria-hidden", String(k !== n));
+    });
+    $$(".deck-dot", deck.el).forEach((d, k) => { if (k === n) d.setAttribute("aria-current", "step"); else d.removeAttribute("aria-current"); });
+    const count = $("#deck-count");
+    if (count) count.textContent = `${n + 1} / ${deck.count}`;
+    $$('.deck-nav [data-deck="prev"]', deck.el).forEach((b) => { b.disabled = n === 0; });
+    $$('.deck-nav [data-deck="next"]', deck.el).forEach((b) => { b.disabled = n === deck.count - 1; });
+  }
+
+  function closeDeck(silent) {
+    if (!deck) return;
+    const { el, returnFocus, idleTimer } = deck;
+    clearTimeout(idleTimer);
+    if (document.fullscreenElement === el) document.exitFullscreen().catch(() => {});
+    el.remove();
+    document.body.classList.remove("deck-open");
+    [".site-header", "#app", ".site-footer"].forEach((sel) => { const n = $(sel); if (n) n.inert = false; });
+    deck = null;
+    if (!silent && returnFocus && returnFocus.focus) returnFocus.focus();
+  }
+
+  function deckAction(action, btn) {
+    if (!deck) return;
+    if ((action === "prev" || action === "next") && btn.classList.contains("deck-hit") && Date.now() - deck.lastSwipe < 500) return;
+    if (action === "next") goSlide(deck.index + 1);
+    else if (action === "prev") goSlide(deck.index - 1);
+    else if (action === "close") closeDeck();
+    else if (action === "print") window.print();
+    else if (action === "fullscreen") {
+      if (document.fullscreenElement) {
+        deck.keepOnExit = true;
+        document.exitFullscreen().catch(() => {});
+      } else if (document.fullscreenEnabled) {
+        deck.el.requestFullscreen().then(() => { if (deck) deck.wasFull = true; }).catch(() => toast("Vollbild ist hier nicht verfügbar."));
+      }
+      else toast("Vollbild ist in diesem Browser nicht verfügbar.");
+    }
+  }
+
+  // Wischen auf Touch-Geräten, Steuerleiste im Vollbild nach kurzer Zeit ausblenden.
+  function bindDeckGestures(el) {
+    const stage = el.querySelector(".deck-stage");
+    let x0 = null;
+    let y0 = null;
+    stage.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "mouse") return;
+      x0 = e.clientX;
+      y0 = e.clientY;
+    });
+    stage.addEventListener("pointerup", (e) => {
+      if (x0 === null || !deck) return;
+      const dx = e.clientX - x0;
+      const dy = e.clientY - y0;
+      x0 = null;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+        deck.lastSwipe = Date.now();
+        goSlide(deck.index + (dx < 0 ? 1 : -1));
+      }
+    });
+    const wake = () => {
+      if (!deck) return;
+      el.classList.remove("idle");
+      clearTimeout(deck.idleTimer);
+      deck.idleTimer = setTimeout(() => {
+        if (deck && document.fullscreenElement === el) el.classList.add("idle");
+      }, 2500);
+    };
+    el.addEventListener("pointermove", wake);
+    el.addEventListener("keydown", wake);
+    wake();
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (!deck) return;
+    const k = e.key;
+    const onControl = e.target instanceof Element && e.target.closest("button, select, input, textarea");
+    if (k === "Escape") {
+      if (!document.fullscreenElement) { e.preventDefault(); closeDeck(); }
+      return;
+    }
+    if (onControl && (k === " " || k === "Enter")) return;
+    if (k === "ArrowRight" || k === "PageDown" || k === " " || k === "Enter") { e.preventDefault(); goSlide(deck.index + 1); }
+    else if (k === "ArrowLeft" || k === "PageUp" || k === "Backspace") { e.preventDefault(); goSlide(deck.index - 1); }
+    else if (k === "Home") { e.preventDefault(); goSlide(0); }
+    else if (k === "End") { e.preventDefault(); goSlide(deck.count - 1); }
+    else if (k === "f" || k === "F") { e.preventDefault(); deckAction("fullscreen", e.target); }
+  });
+
+  /* =====================================================================
      Ereignisse
      ===================================================================== */
   document.addEventListener("click", (e) => {
-    const t = e.target.closest("[data-action],[data-toggle],[data-set],[data-reroll],[data-timer-action],[data-remove-tag],[data-add-tag],[data-color]");
+    const t = e.target.closest("[data-deck],[data-deck-go],[data-action],[data-toggle],[data-set],[data-reroll],[data-timer-action],[data-remove-tag],[data-add-tag],[data-color]");
     if (!t) return;
+
+    if (t.dataset.deckGo) { goSlide(Number(t.dataset.deckGo)); return; }
+    if (t.dataset.deck) { deckAction(t.dataset.deck, t); return; }
 
     if (t.dataset.timerAction) {
       const cd = TIMERS[t.dataset.timer];
@@ -2209,7 +2504,7 @@
         renderStart();
         break;
       }
-      case "present": toggleFullscreen($("#board-stage")); break;
+      case "slides": openDeck(0); break;
       case "copy-board": if (cur) copyText(boardMarkdown(cur.ws), "Pitch-Board als Text kopiert."); break;
       case "download-board": if (cur) downloadText(`gruppe-${cur.ws.group}-${slug(cur.ws.brand)}-rebranding.md`, boardMarkdown(cur.ws)); break;
       case "print": window.print(); break;
