@@ -54,7 +54,7 @@ Lokal lässt sich `index.html` auch direkt im Browser öffnen. Dann öffnen Grup
 
 ## Dateien
 
-- `index.html` – Seitengerüst
+- `index.html` – Seitengerüst. Die Endung `?v=…` an CSS- und JS-Dateien bei jeder Änderung erhöhen, damit Browser keine alten Dateien aus dem Cache verwenden.
 - `css/style.css` – Gestaltung inkl. Dark Mode und Druckansicht
 - `js/config.js` – Einstellungen
 - `js/data.js` – Standardlisten

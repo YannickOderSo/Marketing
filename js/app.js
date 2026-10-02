@@ -1152,7 +1152,11 @@
   }
 
   function openMuster(stepId) {
-    if (!MUSTER) { renderStart(); return; }
+    if (!MUSTER) {
+      renderStart();
+      toast("Das Musterbeispiel konnte nicht geladen werden. Bitte die Seite neu laden (Strg+F5).");
+      return;
+    }
     const base = newWs(MUSTER_COLOR_GROUP, { brand: MUSTER.brand, target: MUSTER.target, team: MUSTER.team || "", heute: MUSTER.heute, branche: MUSTER.branche, info: MUSTER.info });
     const ws = mergeDefaults(base, JSON.parse(JSON.stringify(MUSTER)));
     ws.muster = true;
