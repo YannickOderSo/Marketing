@@ -1,7 +1,7 @@
 // Standardlisten für die Auslosung. Auf der Seite unter "Listen bearbeiten" änderbar.
+// Haribo und die Fitness-Bubble fehlen absichtlich: Sie bilden das Musterbeispiel (js/muster.js).
 window.RR_DATA = {
   brands: [
-    "Haribo | Kinder & Familien | Süßwaren",
     "LEGO | Kinder & Familien | Spielwaren",
     "Red Bull | Junge Erwachsene, Extremsport | Energydrinks",
     "Nivea | Breite Masse, Familien | Körperpflege",
@@ -40,7 +40,6 @@ window.RR_DATA = {
   ].join("\n"),
 
   targets: [
-    "Fitness-Bubble | Gym-Gänger:innen, Proteinfokus, Gymtok & Instagram",
     "Gamer & E-Sport | Lange Sessions, Twitch, Discord, Fokus",
     "Senior:innen 70+ | Gesundheit, Selbstständigkeit, Enkel, Print & TV",
     "Gen Z auf TikTok | Trends, Ironie, Authentizität, kurze Videos",

@@ -25,6 +25,8 @@ Online: **https://yannickoderso.github.io/Marketing/**
    - Zurück: Pfeil links oder Bild hoch; Pos1/Ende springen zur ersten/letzten Folie; F schaltet Vollbild
    - Esc beendet die Präsentation; das Drucker-Symbol gibt alle Folien im Querformat als PDF aus
 
+**Musterbeispiel** (Menüpunkt „Beispiel“): Ein komplett ausgefüllter Arbeitsbereich „Haribo → Fitness-Bubble“ mit allen acht Feldern, Pitch-Board und Folien, nur zum Ansehen. In jedem Feld führt der Link „So sieht das im Musterbeispiel aus“ direkt zum passenden Feld im Beispiel. Haribo und die Fitness-Bubble werden deshalb nicht ausgelost. Die Inhalte stehen in `js/muster.js`.
+
 Alle Eingaben werden automatisch im Browser des jeweiligen Geräts gespeichert (localStorage). Es werden keine Daten an einen Server geschickt. Die Bilder entstehen im Bildgenerator, den die Gruppe selbst öffnet. Die Seite schickt keine Prompts weiter.
 
 ## Online stellen (für die QR-Codes)
@@ -48,6 +50,7 @@ Lokal lässt sich `index.html` auch direkt im Browser öffnen. Dann öffnen Grup
 | Logo | `assets/hskl-logo.png` |
 | Farben (aus dem HS-KL-Logo: Cyan, Petrol, Grün, Lime) | ganz oben in `css/style.css`, Abschnitt „HS-KL Farben“ |
 | Marken, Zielgruppen, gesperrte Kombinationen | `js/data.js` oder auf der Seite unter „Listen bearbeiten“ |
+| Musterbeispiel (Texte, Logo-Entwürfe) | `js/muster.js`, Grafiken in `assets/muster-logo-*.svg` |
 
 ## Dateien
 

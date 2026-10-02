@@ -35,8 +35,11 @@
   const filled = (v) => Array.isArray(v)
     ? v.some((x) => String(x == null ? "" : x).trim() !== "")
     : v !== null && v !== undefined && String(v).trim() !== "";
-  const swVar = (n) => `var(--sw${((n - 1) % 10) + 1})`;
-  const swHex = (n) => SWATCH_HEX[(n - 1) % 10];
+  const swIndex = (n) => ((((Number(n) || 1) - 1) % 10) + 10) % 10;
+  const swVar = (n) => `var(--sw${swIndex(n) + 1})`;
+  const swHex = (n) => SWATCH_HEX[swIndex(n)];
+  const MUSTER = window.RR_MUSTER && window.RR_MUSTER.brand && window.RR_MUSTER.target ? window.RR_MUSTER : null;
+  const MUSTER_COLOR_GROUP = 4;
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const app = $("#app");
 
@@ -162,8 +165,9 @@
   function setPools(bText, tText) {
     pool.brandText = bText;
     pool.targetText = tText;
-    pool.brands = parseBrands(bText);
-    pool.targets = parseTargets(tText);
+    // Marke und Zielgruppe des Musterbeispiels werden nie ausgelost.
+    pool.brands = parseBrands(bText).filter((b) => !MUSTER || b.name !== MUSTER.brand);
+    pool.targets = parseTargets(tText).filter((t) => !MUSTER || t.name !== MUSTER.target);
     pool.brandMap = new Map(pool.brands.map((b) => [b.name, b]));
     pool.targetMap = new Map(pool.targets.map((t) => [t.name, t]));
   }
@@ -510,6 +514,7 @@
     const { parts, params } = parseHash();
     if (parts[0] === "auslosung") renderDraw();
     else if (parts[0] === "g" && /^\d+$/.test(parts[1] || "")) openWorkspace(Number(parts[1]), parts[2], params);
+    else if (parts[0] === "muster") openMuster(parts[1]);
     else renderStart();
     updateNav();
     updateFsLabels();
@@ -522,7 +527,8 @@
     $$(".site-nav a[data-nav]").forEach((a) => {
       const on = (a.dataset.nav === "start" && currentView === "start")
         || (a.dataset.nav === "auslosung" && currentView === "draw")
-        || (a.dataset.nav === "gruppe" && currentView === "ws");
+        || (a.dataset.nav === "gruppe" && currentView === "ws" && !(cur && cur.muster))
+        || (a.dataset.nav === "muster" && currentView === "ws" && !!(cur && cur.muster));
       if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
     });
     const last = store.get("last");
@@ -699,11 +705,30 @@
         ${joinFormHtml(1)}
       </section>
 
+      ${MUSTER ? musterTileHtml() : ""}
+
       ${list.length ? `<section class="flow" aria-labelledby="saved-h">
         <h2 id="saved-h" class="section-title">Auf diesem Gerät gespeichert</h2>
         <div class="ws-list">${list.map(wsCardHtml).join("")}</div>
       </section>` : ""}`;
     startDemo();
+  }
+
+  function musterTileHtml() {
+    const m = MUSTER;
+    const fav = (m.logo && (m.logo.entwuerfe || []).find((d) => d.id === m.logo.favorit)) || null;
+    return `<section class="muster-tile" aria-labelledby="muster-h">
+      ${fav ? `<div class="muster-logo"><img src="${esc(fav.src)}" alt="Logo-Entwurf aus dem Musterbeispiel"></div>` : ""}
+      <div class="muster-copy">
+        <p class="kicker">Musterbeispiel</p>
+        <h2 id="muster-h">${esc(m.brand)} → ${esc(m.target)}</h2>
+        <p class="lead">Einmal komplett durchgespielt, vom Markensteuerrad bis zu den Pitch-Folien. Zum Nachschauen, wenn ein Feld unklar ist.${m.pitch && m.pitch.claim ? ` Der Claim im Beispiel: „${esc(m.pitch.claim)}“` : ""}</p>
+        <div class="row">
+          <a class="btn lime" href="#muster/analyse">Musterbeispiel ansehen ${ICON.arrow}</a>
+          <a class="btn ghost" href="#muster/board">Direkt zum Pitch-Board</a>
+        </div>
+      </div>
+    </section>`;
   }
 
   function startDemo() {
@@ -778,6 +803,7 @@
               <textarea class="input mono-area" id="pool-targets" spellcheck="false"></textarea>
             </div>
           </div>
+          ${MUSTER ? `<p class="field-hint">„${esc(MUSTER.brand)}“ und „${esc(MUSTER.target)}“ sind für das Musterbeispiel reserviert und werden nicht ausgelost.</p>` : ""}
           <div class="row">
             <button type="button" class="btn primary" data-action="pool-apply" id="pool-apply">Listen übernehmen</button>
             <button type="button" class="btn" data-action="pool-reset" id="pool-reset">Standardlisten wiederherstellen</button>
@@ -1125,10 +1151,33 @@
       ${joinFormHtml(n, "Kombination auswählen")}`;
   }
 
+  function openMuster(stepId) {
+    if (!MUSTER) { renderStart(); return; }
+    const base = newWs(MUSTER_COLOR_GROUP, { brand: MUSTER.brand, target: MUSTER.target, team: MUSTER.team || "", heute: MUSTER.heute, branche: MUSTER.branche, info: MUSTER.info });
+    const ws = mergeDefaults(base, JSON.parse(JSON.stringify(MUSTER)));
+    ws.muster = true;
+    ws.group = MUSTER_COLOR_GROUP;
+    cur = { n: MUSTER_COLOR_GROUP, key: null, ws, muster: true, step: STEP_IDS.includes(stepId) ? stepId : "analyse" };
+    renderWorkspace();
+  }
+  const groupName = (ws) => (ws.muster ? "Musterbeispiel" : `Gruppe ${ws.group}`);
+  const stepHref = (id) => (cur && cur.muster ? `#muster/${id}` : `#g/${cur ? cur.n : 1}/${id}`);
+
+  // Musterbeispiel: alles sichtbar, aber nichts änderbar.
+  function applyReadonly() {
+    const root = $(".ws");
+    if (!root) return;
+    root.classList.add("ws-readonly");
+    $$("input, textarea, select", root).forEach((el) => {
+      if (el.tagName === "TEXTAREA" || el.type === "text") el.readOnly = true;
+      else el.disabled = true;
+    });
+  }
+
   function saveNow() {
     clearTimeout(saveTimer);
     saveTimer = null;
-    if (!cur) return;
+    if (!cur || cur.muster) return;
     const ok = store.set(cur.key, cur.ws);
     const el = $("#ws-saved");
     if (!ok) {
@@ -1143,6 +1192,7 @@
   function flushSave() { if (saveTimer) saveNow(); }
   function touch() {
     if (!cur) return;
+    if (cur.muster) { refreshLive(); return; }
     cur.ws.updated = Date.now();
     clearTimeout(saveTimer);
     saveTimer = setTimeout(saveNow, 350);
@@ -1221,10 +1271,14 @@
   }
   function tip(html) { return `<div class="tip">${ICON.bulb}<div>${html}</div></div>`; }
   function intro(nr, title, lead) {
+    const link = MUSTER && cur && !cur.muster
+      ? `<a class="muster-link" href="#muster/${cur.step}">${ICON.bulb} So sieht das im Musterbeispiel aus</a>`
+      : "";
     return `<div class="step-intro">
       <p class="eyebrow">${nr ? `Feld ${nr} von ${FIELD_COUNT}` : "Ergebnis"}</p>
       <h2>${title}</h2>
       <p class="lead">${lead}</p>
+      ${link}
     </div>`;
   }
 
@@ -1435,7 +1489,7 @@
       <p class="poster-claim">${esc(p.claim || "Euer Claim")}</p>
       <div class="field">
         <p class="poster-name">${esc(p.name || ws.brand)}</p>
-        <div class="poster-foot"><span>Gruppe ${ws.group}</span><span>${esc(ws.team)}</span></div>
+        <div class="poster-foot"><span>${groupName(ws)}</span><span>${esc(ws.team)}</span></div>
       </div>`;
   }
 
@@ -1477,7 +1531,8 @@
     const dir = LOGO_DIRECTIONS.find((d) => d.id === l.richtung);
     const colors = [String(l.farben || "").trim(), ws.pitch.farbe].filter(Boolean).join(", ");
     const symbol = String(l.symbol || "").trim();
-    const extra = String(l.extra || "").trim();
+    const extraRaw = String(l.extra || "").trim();
+    const extra = extraRaw && !/[.!?]$/.test(extraRaw) ? `${extraRaw}.` : extraRaw;
     const out = [];
     if (en) {
       out.push(`Design ${type ? type.en : "a logo"} for the brand "${name}".`);
@@ -1775,7 +1830,7 @@
                 ${SWATCH_HEX.slice(0, 8).map((h) => `<button type="button" class="swatch-btn" style="background:${h}" data-color="${h}" aria-label="Farbe ${h} wählen"></button>`).join("")}
               </div>
             </div>
-            <div class="row"><a class="btn primary" href="#g/${ws.group}/logo">Weiter zum Logo-Studio ${ICON.arrow}</a></div>
+            <div class="row"><a class="btn primary" href="${stepHref("logo")}">Weiter zum Logo-Studio ${ICON.arrow}</a></div>
           </div>
           <div class="poster" id="poster" aria-label="Plakatvorschau"></div>
         </div>`;
@@ -1822,7 +1877,7 @@
             <span><b>Bild auswählen</b> oder hierher ziehen. Ein kopiertes Bild fügt ihr mit Strg+V bzw. ⌘V ein.</span>
           </label>
           <div id="logo-gallery">${logoGalleryHtml(ws)}</div>
-          <p class="field-hint">Der Favorit erscheint auf eurem Plakat und im Pitch-Board.</p>
+          <p class="field-hint">${cur.muster ? "Im Musterbeispiel sind die beiden Entwürfe einfache Platzhalter-Grafiken. Der Favorit ist markiert und erscheint auf Plakat, Pitch-Board und Folien." : "Der Favorit erscheint auf eurem Plakat und im Pitch-Board."}</p>
         </section>`;
     },
 
@@ -1858,7 +1913,7 @@
       <section class="board-hero${fav ? " has-logo" : ""}">
         ${fav ? `<div class="board-logo"><img src="${esc(fav.src)}" alt="Logo von ${esc(p.name || ws.brand)}"></div>` : ""}
         <div class="field">
-          <p class="poster-kicker">Gruppe ${ws.group}${ws.team ? " · " + esc(ws.team) : ""}</p>
+          <p class="poster-kicker">${groupName(ws)}${ws.team ? " · " + esc(ws.team) : ""}</p>
           <p class="poster-claim">${esc(p.claim || "Der Claim fehlt noch")}</p>
           <p class="poster-name">${esc(p.name || ws.brand)}</p>
         </div>
@@ -1919,7 +1974,7 @@
     L.push(`# ${ws.pitch.name || ws.brand}: Rebranding für ${ws.target}`);
     L.push("");
     L.push(`${CFG.hochschule} · ${CFG.modul}${CFG.lehrende ? " · " + CFG.lehrende : ""}`);
-    L.push(`Gruppe ${ws.group}${ws.team ? " · " + ws.team : ""}`);
+    L.push(`${groupName(ws)}${ws.team ? " · " + ws.team : ""}`);
     L.push("");
     L.push(`**Mission:** ${ws.brand} → ${ws.target}`);
     L.push(`**Claim:** ${t(ws.pitch.claim)}`);
@@ -1997,33 +2052,42 @@
     const heute = (b && b.heute) || ws.heute;
     const info = (t && t.info) || ws.info;
     const meta = [heute ? `Heute: ${esc(heute)}` : "", info ? `Neu: ${esc(info)}` : ""].filter(Boolean).join(" · ");
+    const muster = !!cur.muster;
+    const last = muster ? store.get("last") : null;
+    const banner = muster ? `<div class="muster-banner">
+        <span class="muster-badge">${ICON.bulb} Musterbeispiel</span>
+        <p>So kann ein fertig ausgefüllter Arbeitsbereich aussehen. Klickt euch durch alle Felder bis zum Pitch-Board und zu den Folien. Ändern lässt sich hier nichts. ${esc(ws.brand)} und ${esc(ws.target)} werden bei der Auslosung nicht gezogen.</p>
+        ${last && last.n ? `<a class="btn sm primary" href="#g/${last.n}/${step}">Zurück zu Gruppe ${last.n}</a>` : ""}
+      </div>` : "";
     app.innerHTML = `
-      <section class="ws" style="--sw:${swVar(n)}">
+      <section class="ws${muster ? " is-muster" : ""}" style="--sw:${swVar(n)}">
+        ${banner}
         <header class="ws-head">
-          <div class="ws-tag"><span class="label">Gruppe</span><span class="tag-num">${n}</span></div>
+          <div class="ws-tag">${muster ? `<span class="label">Muster</span><span class="tag-num">M</span>` : `<span class="label">Gruppe</span><span class="tag-num">${n}</span>`}</div>
           <div class="ws-mission">
-            <p class="eyebrow">Eure Mission</p>
+            <p class="eyebrow">${muster ? "Mission im Musterbeispiel" : "Eure Mission"}</p>
             <h1 class="mission"><span>${esc(ws.brand)}</span>${ICON.arrow}<span class="to">${esc(ws.target)}</span></h1>
             ${meta ? `<p class="mission-meta">${meta}</p>` : ""}
           </div>
           <div class="ws-side">
             <label class="field"><span class="label">Team</span><input class="input" id="ws-team" data-field="team" value="${esc(ws.team)}" placeholder="Eure Namen"></label>
             <div class="progress" id="ws-progress" role="progressbar" aria-label="Fortschritt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
-            <div class="progress-label"><span><b id="ws-progress-num">0 %</b> bearbeitet</span><span class="saved" id="ws-saved">Speichert automatisch</span></div>
+            <div class="progress-label"><span><b id="ws-progress-num">0 %</b> bearbeitet</span><span class="saved" id="ws-saved">${muster ? "Nur zum Ansehen" : "Speichert automatisch"}</span></div>
           </div>
         </header>
         <nav class="steps-nav" aria-label="Arbeitsfelder">
-          ${STEPS.map((s, i) => `<a class="step-tab" href="#g/${n}/${s.id}" data-step="${s.id}"${s.id === step ? ' aria-current="step"' : ""}>
+          ${STEPS.map((s, i) => `<a class="step-tab" href="${stepHref(s.id)}" data-step="${s.id}"${s.id === step ? ' aria-current="step"' : ""}>
             <span class="step-ring"><span>${s.id === "board" ? "★" : i + 1}</span></span>${esc(s.short)}</a>`).join("")}
         </nav>
         <div class="step-body" id="step-body">${STEP_RENDER[step]()}</div>
         <footer class="step-foot">
-          ${prev ? `<a class="btn" href="#g/${n}/${prev.id}">${ICON.back} ${esc(prev.short)}</a>` : `<a class="btn" href="#start">${ICON.back} Startseite</a>`}
-          ${next ? `<a class="btn primary" href="#g/${n}/${next.id}">Weiter: ${esc(next.short)} ${ICON.arrow}</a>` : `<span></span>`}
+          ${prev ? `<a class="btn" href="${stepHref(prev.id)}">${ICON.back} ${esc(prev.short)}</a>` : `<a class="btn" href="#start">${ICON.back} Startseite</a>`}
+          ${next ? `<a class="btn primary" href="${stepHref(next.id)}">Weiter: ${esc(next.short)} ${ICON.arrow}</a>` : `<span></span>`}
         </footer>
       </section>`;
-    if (step === "positionierung") bindMap();
-    if (step === "logo") bindLogoDrop();
+    if (step === "positionierung" && !muster) bindMap();
+    if (step === "logo" && !muster) bindLogoDrop();
+    if (muster) applyReadonly();
     if (step === "board") pitchTimer.sync();
     refreshLive();
     const active = $(".step-tab[aria-current='step']");
@@ -2166,7 +2230,7 @@
       { label: "Titel", tone: "poster", html: `
         <div class="d-cover">
           ${logo("d-logo-lg")}
-          <p class="d-kicker">Gruppe ${ws.group}${team}</p>
+          <p class="d-kicker">${groupName(ws)}${team}</p>
           <h2 class="d-claim">${esc(claim || name)}</h2>
           <p class="d-sub">${claim ? `${esc(name)} · ` : ""}${esc(ws.brand)} für ${esc(ws.target)}</p>
         </div>` },
@@ -2256,7 +2320,7 @@
           ${logo("d-logo-lg")}
           <h2 class="d-claim">${esc(claim || name)}</h2>
           <p class="d-sub">Danke! Jetzt seid ihr dran: Fragen und Feedback?</p>
-          <p class="d-kicker">Gruppe ${ws.group}${team}</p>
+          <p class="d-kicker">${groupName(ws)}${team}</p>
         </div>` }
     ];
   }
@@ -2266,7 +2330,7 @@
     closeDeck(true);
     const ws = cur.ws;
     const slides = deckSlides(ws);
-    const footName = `${ws.pitch.name || ws.brand} · Gruppe ${ws.group}`;
+    const footName = `${ws.pitch.name || ws.brand} · ${groupName(ws)}`;
     const el = document.createElement("div");
     el.className = "deck";
     el.id = "deck";
@@ -2425,6 +2489,7 @@
     if (t.dataset.reroll) { reroll(Number(t.dataset.i), t.dataset.reroll); return; }
 
     if (cur && currentView === "ws") {
+      if (cur.muster && (t.dataset.toggle || t.dataset.addTag || t.dataset.removeTag || t.dataset.color || (t.dataset.set && t.dataset.set !== "logo.sprache"))) return;
       if (t.dataset.toggle) {
         const path = t.dataset.toggle;
         const val = t.dataset.value;
@@ -2510,14 +2575,14 @@
       case "print": window.print(); break;
       case "copy-prompt": if (cur) copyText(logoPrompt(cur.ws), "Prompt kopiert. Jetzt im Bildgenerator einfügen."); break;
       case "logo-fav": {
-        if (!cur) break;
+        if (!cur || cur.muster) break;
         cur.ws.logo.favorit = t.dataset.id;
         renderLogoGallery();
         touch();
         break;
       }
       case "logo-remove": {
-        if (!cur) break;
+        if (!cur || cur.muster) break;
         const l = cur.ws.logo;
         l.entwuerfe = l.entwuerfe.filter((d) => d.id !== t.dataset.id);
         if (l.favorit === t.dataset.id) l.favorit = l.entwuerfe.length ? l.entwuerfe[0].id : "";
@@ -2528,7 +2593,7 @@
       case "logo-download": {
         const fav = cur && favoriteLogo(cur.ws);
         if (!fav) break;
-        const ext = (/^data:image\/(\w+)/.exec(fav.src) || [])[1] || "png";
+        const ext = /\.svg$/i.test(fav.src) ? "svg" : ((/^data:image\/(\w+)/.exec(fav.src) || [])[1] || "png");
         const a = document.createElement("a");
         a.href = fav.src;
         a.download = `logo-${slug(cur.ws.pitch.name || cur.ws.brand)}.${ext === "jpeg" ? "jpg" : ext}`;
@@ -2552,7 +2617,7 @@
       if (link) link.setAttribute("href", wsHash(i + 1, groups[i]));
       return;
     }
-    if (cur && currentView === "ws" && el.dataset.field) {
+    if (cur && currentView === "ws" && el.dataset.field && !cur.muster) {
       const v = el.type === "range" ? Number(el.value) : el.value;
       setPath(cur.ws, el.dataset.field, v);
       touch();
@@ -2562,7 +2627,7 @@
   document.addEventListener("change", (e) => {
     const el = e.target;
     if (el.id === "draw-timer-min") { drawTimer.setMinutes(Number(el.value)); return; }
-    if (el.id === "logo-file") { addLogoFiles(el.files).then(() => { el.value = ""; }); return; }
+    if (el.id === "logo-file") { if (cur && !cur.muster) addLogoFiles(el.files).then(() => { el.value = ""; }); return; }
     if (el.id === "join-group") {
       const g = groups[Number(el.value) - 1];
       if (g) {
@@ -2576,7 +2641,7 @@
 
   document.addEventListener("keydown", (e) => {
     const el = e.target;
-    if (!(el instanceof Element) || !el.matches("[data-tag-input]") || !cur) return;
+    if (!(el instanceof Element) || !el.matches("[data-tag-input]") || !cur || cur.muster) return;
     const path = el.dataset.tagInput;
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
@@ -2588,7 +2653,7 @@
   });
 
   document.addEventListener("paste", (e) => {
-    if (!cur || currentView !== "ws" || cur.step !== "logo" || !e.clipboardData) return;
+    if (!cur || cur.muster || currentView !== "ws" || cur.step !== "logo" || !e.clipboardData) return;
     const files = Array.from(e.clipboardData.files || []).filter((f) => /^image\//.test(f.type));
     if (!files.length) return;
     e.preventDefault();
